@@ -2,7 +2,7 @@
 
 | | |
 |---|---|
-| **Status geral** | Aprovado para implementação (Nubank). Pendentes: Itaú (Q1) e Q12 |
+| **Status geral** | Aprovado para implementação (Nubank e Itaú). Pendente, sem bloquear: Q12 (resto de centavos em parcelas) |
 | **Autor** | guil-nunes |
 | **Última atualização** | 2026-09-25 |
 | **Stack** | FastAPI · SQLite · React (Vite) — execução 100% local |
@@ -83,8 +83,14 @@ Adapters para os 4 formatos: **Nubank conta**, **Nubank cartão**, **Itaú conta
 - [ ] ✅ **Formatos suportados no MVP** (verificados em `samples/`, detalhes no [Anexo A](#anexo-a--formatos-de-arquivo-verificados)):
   - **Nubank cartão** → CSV (`date,title,amount`).
   - **Nubank conta** → **OFX** (preferencial). O CSV da conta traz os mesmos dados e o mesmo identificador; aceitá-lo é opcional (P1).
-  - **PDF não é suportado** — o extrato em PDF da conta Nubank traz as mesmas transações do OFX/CSV, sem informação adicional.
-- 🟡 **Itaú conta e Itaú cartão**: sem amostras ainda. Se o Itaú exportar OFX para a conta, o parser OFX genérico cobre os dois bancos. Ver Q1.
+  - **Itaú conta** → **PDF** do extrato (único formato disponível; Q13). Tabela de coluna única; data = data de lançamento.
+  - **Itaú cartão** → **PDF** da fatura (único formato disponível; Q13). Requisitos específicos:
+    - extração por região, uma coluna de cada vez (a página tem duas colunas);
+    - ano inferido pela data de fechamento da fatura (as linhas trazem só `DD/MM`);
+    - lê as seções "compras e saques" e "produtos e serviços"; ignora "próximas faturas", resumo e simulações;
+    - **conferência obrigatória**: a soma das linhas lidas deve bater com "Total dos lançamentos atuais"; se não bater, o arquivo é rejeitado inteiro.
+  - **PDF do Nubank não é suportado** — traz as mesmas transações do OFX/CSV, sem informação adicional.
+- Se no futuro o Itaú oferecer OFX para a conta, o parser OFX genérico passa a cobri-lo e o adapter de PDF vira fallback.
 
 #### R2. Deduplicação ✅
 - [ ] Enviar o mesmo arquivo duas vezes não cria nenhuma transação nova (curto-circuito por `file_sha256`, depois checagem por transação).
@@ -103,7 +109,10 @@ Adapters para os 4 formatos: **Nubank conta**, **Nubank cartão**, **Itaú conta
 - [ ] ✅ **Verificado no CSV do cartão Nubank:** as parcelas `n ≥ 2` vêm com a **data de abertura do ciclo da fatura** (todas em `2026-08-01` na amostra), e não com a data da compra original. Portanto, para o Nubank, competência da parcela = mês da data da linha — o que já produz o "mês a mês" sem cálculo adicional.
 - [ ] ✅ **Verificado:** a parcela `1/N` vem com a **data real da compra** (ex.: `2026-07-02, Pag*Steam - Parcela 1/3` na fatura de ago/2026, fora do dia 01 do ciclo). A parcela `2/3` aparece na fatura seguinte datada em `2026-08-01`. Regra única para o Nubank: **competência = mês da data da linha**, para compras à vista e para qualquer parcela.
 - [ ] Datas com fuso (ex.: OFX `DTPOSTED …[-3:BRT]`) usam a **data local como veio no arquivo** — nunca convertidas para UTC, para uma compra às 22h do dia 31 não mudar de mês.
-- Premissa: nas duas faturas analisadas o ciclo vai do dia 01 ao fim do mês. Se o dia de fechamento do cartão mudar, rever a regra das parcelas `n ≥ 2`.
+- [ ] ✅ **Itaú cartão:** todas as parcelas trazem a **data original da compra**. Competência da parcela `n/N` = mês da compra + (n−1) meses (a regra geral, aplicada literalmente). Compras à vista: mês da data da compra.
+- [ ] ✅ **Antecipação de parcelas (Q14):** quando um mesmo arquivo traz **várias parcelas do mesmo grupo**, todas recebem a competência da **menor parcela presente no arquivo**. Assim o estorno de cancelamento (ex.: `PG *ENJOEI.COM.BR ATIV -493,84`) se compensa no mesmo mês, sem inflar meses futuros.
+- [ ] ✅ **Itaú conta:** competência = mês da data de lançamento (coluna `data`), não a data embutida na descrição.
+- Premissa (Nubank): nas duas faturas analisadas o ciclo vai do dia 01 ao fim do mês. Se o dia de fechamento do cartão mudar, rever a regra das parcelas `n ≥ 2`.
 
 #### R4. Marcação despesa × ignorar ✅
 - [ ] Toda transação tem um tipo: `despesa` ou `ignorar` (com motivo: `pagamento_fatura`, `transferencia_interna`, `investimento`, `receita`, `outro`).
@@ -111,7 +120,10 @@ Adapters para os 4 formatos: **Nubank conta**, **Nubank cartão**, **Itaú conta
   - Conta: **todo crédito** (valor de entrada) → `ignorar/receita` (inclui "Transferência recebida", "Crédito em conta").
   - Conta: `Pagamento de fatura` → `ignorar/pagamento_fatura`.
   - Cartão: `Pagamento recebido` (valor negativo) → `ignorar/pagamento_fatura`.
-  - Conta: transferência enviada para contas do próprio titular (nome do titular configurável em `.env`) → `ignorar/transferencia_interna`.
+- [ ] ✅ **Conta analisada = provedora principal de capital (Q15).** Uma saída para uma conta do **mesmo titular** **não** é ignorada automaticamente: é tratada como pagamento de uma conta (despesa) ou investimento. Por padrão entra como `despesa` sem categoria, para revisão.
+- [ ] ✅ **Investimento é sempre declarado pelo usuário.** Nenhuma estratégia aplica `ignorar/investimento` sozinha — nem a memória. As estratégias só podem **sugerir** investimento (ex.: destino é o próprio titular, `APLICACAO COFRINHOS`); a transação continua `despesa` até o usuário confirmar a sugestão. Sugestões aparecem na revisão (R7) com confirmação em um clique, inclusive em lote.
+- `transferencia_interna` continua existindo só como escolha manual.
+- Risco aceito: se as duas contas do mesmo titular forem importadas, um valor transferido de uma para a outra e depois gasto conta duas vezes (como despesa na origem e como gasto no destino), até o usuário marcar a transferência como `ignorar`.
 - [ ] **Pix enviado para terceiros** entra como `despesa` **sem categoria**, para revisão manual; o `merchant_key` é o nome do destinatário, então a memória (R6) aprende por pessoa.
 - [ ] ✅ **Estornos** (valor negativo no cartão que não é pagamento; ex.: `Uber - NuPay, - 12,93` que anula uma compra de `12,93` no mesmo dia) entram como **`despesa` com valor negativo** na categoria do estabelecimento, abatendo o total.
 - [ ] ✅ **Impostos agregados** (ex.: `IOF de "Anthropic* Claude Sub"`) entram como `despesa` e **herdam a categoria da compra original**: o `merchant_key` é o do estabelecimento citado, então seguem a mesma memória/regra e acompanham correções feitas nele.
@@ -139,13 +151,15 @@ Ordem de execução — para na primeira estratégia que responder com confianç
 
 | # | Estratégia | Fase |
 |---|---|---|
-| 0 | **Regras estruturais** — crédito na conta → `ignorar/receita`; `Pagamento de fatura` / `Pagamento recebido` → `ignorar/pagamento_fatura`; transferência para o titular → `ignorar/transferencia_interna`. Rodam antes da memória e só são sobrepostas por correção manual **na própria transação** (nunca pela memória do estabelecimento) | P0 |
+| 0 | **Regras estruturais** — crédito na conta → `ignorar/receita`; `Pagamento de fatura` / `Pagamento recebido` → `ignorar/pagamento_fatura`. Rodam antes da memória e só são sobrepostas por correção manual **na própria transação** (nunca pela memória do estabelecimento). Saída para o próprio titular **não** é regra estrutural (Q15) | P0 |
 | 1 | **Memória do usuário** — correções anteriores por `merchant_key` (confiança 1.0) | P0 |
 | 2 | **Regras de palavra-chave** — ex.: contém `IFOOD` → Alimentação | P0 |
-| 3 | **Classificador local** (TF-IDF + Naive Bayes, treinado no histórico já revisado) | P1 |
-| 4 | **Gemini API** (fallback opcional para o que sobrar) | P1 |
+| 3 | **Categoria do banco** (baixa confiança, Q16) — mapeia a categoria informada pelo banco para as nossas (ex.: Itaú `SAÚDE` → Saúde e Bem-Estar, `ALIMENTAÇÃO` → Alimentação, `MORADIA` → Moradia); `DIVERSOS` e categorias sem mapeamento não sugerem nada. Mapeamento editável | P0 (Itaú) |
+| 4 | **Classificador local** (TF-IDF + Naive Bayes, treinado no histórico já revisado) | P1 |
+| 5 | **Gemini API** (fallback opcional para o que sobrar) | P1 |
 
-- [ ] Cada estratégia implementa a mesma interface e devolve um único resultado `Classification(kind, ignore_reason, category, source, confidence)` — tipo (R4) e categoria vêm juntos; adicionar/remover estratégia não altera as demais.
+- [ ] Cada estratégia implementa a mesma interface e devolve um único resultado `Classification(kind, ignore_reason, category, source, confidence, suggested_ignore_reason)` — tipo (R4) e categoria vêm juntos; adicionar/remover estratégia não altera as demais. `suggested_ignore_reason` só carrega sugestões que exigem confirmação (hoje: `investimento`, Q15).
+- [ ] Sugestões de baixa confiança (categoria do banco, classificador) preenchem a categoria, mas a transação continua na fila de "baixa confiança" até ser revisada.
 - [ ] Cada transação registra **origem** da categoria (`memoria`, `regra`, `classificador`, `gemini`, `manual`, `nenhuma`) e **confiança**.
 - [ ] Cada transação registra se foi **revisada** (`reviewed_at`): preenchido quando o usuário corrige **ou confirma** a sugestão sem alterar.
 - [ ] Correção manual atualiza a memória do usuário e **recategoriza as transações ainda não revisadas** (`reviewed_at IS NULL`) do mesmo estabelecimento.
@@ -186,7 +200,7 @@ Ordem de execução — para na primeira estratégia que responder com confianç
 - [ ] ✅ **Identidade da compra parcelada** (`installment_group_key`, Q11/Q12):
   `hash(conta + description_root + N + mês da parcela 1 + ordinal)`, onde:
   - `description_root` = `description_raw` sem o sufixo ` - Parcela n/N` (estável; **não** usa `merchant_key`, que muda com o normalizador — R5);
-  - mês da parcela 1 = competência − (n−1) meses;
+  - mês da parcela 1 = calculado **pela data da linha, antes do ajuste de antecipação** (Q14): no Nubank, mês da linha − (n−1); no Itaú, mês da data da compra (que toda parcela traz). O ajuste de antecipação muda só a competência, nunca a identidade do grupo;
   - `ordinal` = posição da linha entre as linhas do **mesmo arquivo** com mesmos `description_root`, N e n, ordenadas por valor. Distingue compras parceladas idênticas no mesmo mês (sem ele, a segunda violaria a unicidade e derrubaria o arquivo inteiro).
   - O **valor da parcela não entra na chave**: parcelas com diferença de centavos (resto do arredondamento na 1ª) continuam no mesmo grupo.
 - [ ] ✅ **Parcelas futuras são gravadas como transações com `status = 'projetada'`** (Q4), tratadas como **dado derivado e reconstruído**:
@@ -219,7 +233,7 @@ Valor mínimo de despesas já comprometido no mês seguinte: **parcelas projetad
 - **Novos bancos**: adicionar um banco deve exigir apenas um novo adapter + testes com arquivo exemplo.
 - **OFX como caminho padrão**: o parser OFX genérico já é P0 (conta Nubank); com mais bancos, pode substituir adapters específicos.
 - **Apelidos de estabelecimento**: unir dois `merchant_key` como o mesmo estabelecimento (R9).
-- **Importação de PDF de fatura**, caso algum banco só ofereça esse formato.
+- **OFX do Itaú**, se passar a estar disponível, substituindo o adapter de PDF da conta.
 - **Subcategorias** (ex.: Alimentação → Delivery / Restaurante).
 - **Exportação** dos dados consolidados (CSV).
 
@@ -317,6 +331,7 @@ account
   kind                 TEXT   -- 'conta' | 'cartao'
   external_account_id  TEXT NOT NULL DEFAULT ''  -- ex.: <ACCTID> do OFX; '' quando o arquivo não identifica (CSV do cartão Nubank)
   name                 TEXT   -- rótulo exibido
+  holder               TEXT   -- titular da conta (Q15: contas de mais de uma pessoa); informado na primeira importação, usado para sugerir investimento
   UNIQUE(bank, kind, external_account_id)  -- '' em vez de NULL: no SQLite, NULLs são distintos em UNIQUE e permitiriam contas duplicadas
 
 import_batch                     -- só importações bem-sucedidas são gravadas
@@ -349,6 +364,8 @@ transactions                     -- plural: TRANSACTION é palavra-chave do SQL
   normalizer_version   INT       -- versão do normalizador que gerou o merchant_key (R5)
   kind                 TEXT      -- 'despesa' | 'ignorar'  (estorno = despesa com amount negativo)
   ignore_reason        TEXT NULL -- 'pagamento_fatura' | 'transferencia_interna' | 'investimento' | 'receita' | 'outro'
+  suggested_ignore_reason TEXT NULL -- sugestão que exige confirmação do usuário (hoje só 'investimento', Q15); não altera kind
+  bank_category        TEXT NULL -- categoria informada pelo banco (fatura Itaú), usada pela estratégia 3 (Q16)
   category_id          FK → category NULL
   category_source      TEXT      -- 'memoria' | 'regra' | 'classificador' | 'gemini' | 'manual' | 'nenhuma'
   category_confidence  REAL NULL
@@ -416,18 +433,22 @@ Transações sem categoria ficam com `category_id = NULL` ("Sem categoria") — 
 
 | # | Questão | Quem responde | Bloqueia? |
 |---|---|---|---|
-| **Q1** | ✅ **Nubank resolvido:** cartão = CSV, conta = OFX (CSV opcional), PDF descartado. 🟡 **Itaú pendente:** quais formatos a conta e a fatura do cartão exportam (OFX? XLS? só PDF?). | Usuário (baixar arquivos do Itaú) | Só para os adapters do Itaú — Nubank pode começar |
+| **Q1** | ✅ **Nubank resolvido:** cartão = CSV, conta = OFX (CSV opcional), PDF descartado. ✅ **Itaú:** conta e cartão em PDF (Q13, Anexo A.6). | Usuário | — |
 | **Q2** | ✅ Verificado em duas faturas consecutivas: parcela `1/N` vem com a data da compra, parcelas `n ≥ 2` com a data de abertura do ciclo. Competência = mês da data da linha (ver R3). | — | — |
 | **Q3** | ✅ Decidida: `conta + external_id` quando o arquivo tem identificador; `hash(conta + data + valor + descrição + ordinal)` quando não tem (ver R2). | — | — |
 | **Q4** | ✅ Parcelas futuras gravadas como transações `projetada`, substituídas pela real quando ela chega (ver R10). | Usuário | — |
 | **Q5** | ✅ Tolerância de valor ±10%, intervalo de 25 a 35 dias, mínimo de 3 ocorrências (ver R9). | Usuário | — |
 | **Q11** | ✅ `installment_group_key` inclui o mês de competência da parcela 1 (derivado de `competência − (n−1)` meses), evitando colisão entre compras parceladas idênticas feitas em meses diferentes. | Usuário | — |
-| **Q12** | 🟡 Revisão de arquitetura: `installment_group_key` passa a usar `description_root` + ordinal, sem valor e sem `merchant_key` (R10). Pendente: confirmar com as amostras do Itaú se a ordenação por valor no ordinal é estável quando a 1ª parcela traz o resto dos centavos. **Risco aceito:** com duas compras parceladas idênticas no mesmo mês, se uma for cancelada/antecipada, a outra passa a ter ordinal 1 no arquivo seguinte e cai no grupo errado — afeta só as projetadas e o sinal de revisão, nunca os totais reais. | Usuário (sessão futura, com amostras do Itaú) | Não — modelo aprovado com ressalva |
+| **Q12** | 🟡 Revisão de arquitetura: `installment_group_key` passa a usar `description_root` + ordinal, sem valor e sem `merchant_key` (R10). Pendente: confirmar com as amostras do Itaú se a ordenação por valor no ordinal é estável quando a 1ª parcela traz o resto dos centavos. **Risco aceito:** com duas compras parceladas idênticas no mesmo mês, se uma for cancelada/antecipada, a outra passa a ter ordinal 1 no arquivo seguinte e cai no grupo errado — afeta só as projetadas e o sinal de revisão, nunca os totais reais. **Amostra do Itaú (2026-10-01):** parcelas de mesmo grupo vêm com valores iguais (nenhum resto de centavos observado) e todas trazem a **data exata da compra**, então no Itaú a chave pode usar a data da compra em vez do mês, o que torna colisões ainda mais raras. Sem evidência contrária; resta confirmar o caso do resto de centavos quando aparecer. | Usuário | Não — modelo aprovado com ressalva |
 | **Q6** | ✅ Classificador local ativado a partir de **100 transações revisadas** (valor inicial, configurável; reavaliar medindo acurácia). | Usuário | — |
 | **Q7** | ✅ Card incluído (P1, fase 4): mês seguinte ao selecionado, recorrentes pelo último lançamento, inclui conta e cartão (ver R12). | Usuário | — |
 | **Q8** | ✅ Lista inicial definida (7 categorias). | Usuário | — |
 | **Q9** | ✅ Estorno = despesa com valor negativo, abatendo a categoria do estabelecimento. | Usuário | — |
 | **Q10** | ✅ IOF e demais impostos agregados a uma compra herdam a categoria da compra original (ver R4). | Usuário | — |
+| **Q13** | ✅ Itaú conta e cartão importados via **PDF** (único formato disponível). Fatura com extração por coluna, inferência de ano e conferência obrigatória contra os totais (ver R1). | Usuário | — |
+| **Q14** | ✅ Antecipação: várias parcelas do mesmo grupo no mesmo arquivo recebem a competência da menor parcela do arquivo; a identidade do grupo não muda (ver R3, R10). | Usuário | — |
+| **Q15** | ✅ Contas de mais de um titular. A conta analisada é a provedora principal de capital: saída para o mesmo titular é despesa (pagamento de conta) ou investimento, nunca ignorada automaticamente. Investimento só por declaração do usuário; estratégias apenas sugerem (ver R4). | Usuário | — |
+| **Q16** | ✅ Categoria do banco vira a estratégia 3 do R6, de baixa confiança, com mapeamento editável. | Usuário | — |
 
 ## 10. Métricas de sucesso
 
@@ -453,9 +474,9 @@ Sem prazo fixo — projeto pessoal. Ordem sugerida, cada fase utilizável por si
 
 | Fase | Entregas | Depende de |
 |---|---|---|
-| **0. Descoberta** | ✅ Nubank analisado; arquitetura e modelo de dados aprovados. Pendente (não bloqueia): amostras do Itaú (Q1) e Q12 | — |
+| **0. Descoberta** | ✅ Nubank e Itaú analisados; arquitetura e modelo de dados aprovados. Pendente (não bloqueia): Q12 | — |
 | **1. Importar** | R1, R2, R3, R4, R5 + estrutura do repositório, Alembic, backup automático, teste de independência de ordem | Fase 0 |
-| **2. Categorizar e revisar** | R6 (estratégias 1–2), R7 | Fase 1 |
+| **2. Categorizar e revisar** | R6 (estratégias 0–3), R7 | Fase 1 |
 | **3. Dashboard** | R8 | Fase 2 |
 | **4. Recorrência e parcelas** | R9, R10, R12 | Fase 3 |
 | **5. Categorização avançada** | R11 (classificador local, Gemini opcional) | Fase 2 + histórico revisado |
@@ -522,8 +543,52 @@ Mesmas transações do OFX, em layout de relatório (descrições quebradas em v
 |---|---|
 | `Pagamento de fatura` | `ignorar / pagamento_fatura` |
 | `Compra no débito - <ESTABELECIMENTO>` | `despesa`, merchant = estabelecimento |
-| `Transferência enviada pelo Pix - <NOME> - ...` | `despesa` sem categoria (ou `transferencia_interna` se `<NOME>` = titular) |
+| `Transferência enviada pelo Pix - <NOME> - ...` | `despesa` sem categoria; se `<NOME>` = titular, sugere `investimento` (só sugestão, Q15) |
 | `Transferência recebida pelo Pix ...`, `Transferência Recebida ...`, `Crédito em conta` | `ignorar / receita` (todo crédito) |
 
-### A.6 Itaú 🟡 pendente
-Sem amostras. Necessário: extrato da conta e fatura do cartão, idealmente em OFX ou XLS.
+### A.6 Itaú — PDF ✅ (único formato disponível, Q13)
+As duas amostras vieram **apenas em PDF** e são de **outros titulares** (servem como referência de formato). Exemplos abaixo sem dados pessoais.
+
+#### A.6.1 Itaú conta — extrato PDF
+```
+data        lançamentos                       valor (R$)
+01/10/2026  ON Uber UBER 01/10                   -8,94
+21/09/2026  ON Uber UBER 19/09                  -10,93     ← lançado em 21/09, compra em 19/09
+29/09/2026  APLICACAO COFRINHOS                 -60,00
+29/09/2026  REND PAGO APLIC AUT MAIS              0,33
+24/09/2026  PIX AUT HOTMART 24/09                -1,00
+25/09/2026  PIX TRANSF <NOME7>25/09          -1.000,00
+```
+
+| Aspecto | Observado |
+|---|---|
+| Layout | Tabela de **coluna única**, uma linha por lançamento — extração de texto limpa |
+| Período | "período de visualização: DD/MM/AAAA até DD/MM/AAAA"; inclui o **dia corrente parcial** (emitido no meio do dia) |
+| Data | `DD/MM/AAAA` = data de **lançamento**; muitas descrições trazem a data real da operação no final (`UBER 19/09` lançado em 21/09) |
+| Valor | Formato brasileiro, **com sinal** (negativo = saída) |
+| Identificador | **Nenhum** → dedup por hash + ordinal (R2). Funciona com períodos sobrepostos: o arquivo mais novo sempre contém o mesmo dia completo ou mais linhas |
+| Descrição | Truncada em largura fixa, com `DD/MM` colado no fim (`PIX TRANSF <NOME7>25/09`). **Não indica direção** do Pix (enviado/recebido) — só o sinal do valor |
+| Padrões | `ON <loja>` / `PAY <loja>` = compra no débito · `PIX TRANSF` = Pix · `PIX AUT` = Pix automático (assinatura) · `APLICACAO COFRINHOS` = aporte (`despesa` com sugestão de `investimento`, Q15) · `REND PAGO APLIC AUT` = rendimento (crédito → `ignorar/receita`) |
+
+#### A.6.2 Itaú cartão — fatura PDF
+```
+DATA   ESTABELECIMENTO                VALOR EM R$
+15/09  MERCADOLIVRE*5525309/12             10,71     ← fatura de jun/2025; compra de set/2024
+       VESTUÁRIO .Osasco                              ← categoria do banco + cidade
+14/05  PG *ENJOEI.COM.BR 01/04            123,46
+14/05  PG *ENJOEI.COM.BR 02/04            123,46     ← 4 parcelas cobradas na mesma fatura
+14/05  PG *ENJOEI.COM.BR ATIV            -493,84     ← cancelamento: estorno do total
+12/04  RafolinoPresen                      -0,06     ← crédito pequeno (ajuste/cashback)
+```
+
+| Aspecto | Observado |
+|---|---|
+| Layout | **Duas colunas por página**; a extração de texto simples intercala as colunas → exige extração por região (ex.: `pdfplumber` com recorte por coluna) |
+| Data | `DD/MM` **sem ano** → ano inferido pela data de fechamento da fatura (a data mais recente ≤ fechamento) |
+| Parcelas | Sufixo `NN/NN` colado na descrição truncada (`MERCADOLIVRE*5525309/12`). **Todas as parcelas trazem a data original da compra** — diferente do Nubank |
+| Antecipação / cancelamento | Várias parcelas do mesmo grupo na mesma fatura, seguidas de um estorno do total (`ATIV`) |
+| Categoria do banco | Cada linha traz uma categoria do Itaú (`VESTUÁRIO`, `SAÚDE`, `MORADIA`, `ALIMENTAÇÃO`, `TURISMO E ENTRETENIM.`, `HOBBY`, `DIVERSOS`) |
+| Seções | "compras e saques" (por cartão/final), "produtos e serviços" (ex.: anuidade parcelada), "compras parceladas - próximas faturas" |
+| Totais de controle | "Lançamentos no cartão", "Lançamentos produtos e serviços", "Total dos lançamentos atuais" e "Próxima fatura" — permitem **conferir o parser** e as projetadas (R10) |
+| Pagamento da fatura | Só no resumo ("Pagamento efetuado em…"), **não** na lista de lançamentos |
+| Identificador | **Nenhum** → dedup por hash + ordinal |
