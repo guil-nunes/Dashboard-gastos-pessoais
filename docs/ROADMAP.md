@@ -40,30 +40,30 @@ Objetivo: importar os 4 formatos com competência, deduplicação e marcação e
 **Pronto quando:** `pytest` e o frontend sobem do zero seguindo o README.
 
 ### 1.2 Domínio puro (`domain/`)
-- [ ] Dinheiro em centavos: parsing de `"1.234,56"`, `"- 12,93"`, `-4350.29`, `TRNAMT` (R1)
-- [ ] Datas: ISO, `DD/MM/AAAA`, OFX com fuso sem conversão para UTC, `DD/MM` com ano inferido pelo fechamento (R3)
-- [ ] Normalizador versionado: `description_raw` → `merchant_key` com os casos reais da spec (R5)
-- [ ] Extração de parcela `n/N` nos dois estilos: ` - Parcela 4/4` (Nubank) e `09/12` colado (Itaú)
-- [ ] Competência: regra Nubank, regra Itaú e ajuste de antecipação (R3, Q14)
-- [ ] `dedup_key`: `external_id` quando existe; hash + ordinal quando não (R2)
-- [ ] `installment_group_key`: `description_root` + N + mês da parcela 1 (pela data da linha, antes do ajuste de antecipação) + ordinal (R10, Q11, Q14)
+- [x] Dinheiro em centavos: parsing de `"1.234,56"`, `"- 12,93"`, `-4350.29`, `TRNAMT` (R1)
+- [x] Datas: ISO, `DD/MM/AAAA`, OFX com fuso sem conversão para UTC, `DD/MM` com ano inferido pelo fechamento (R3)
+- [x] Normalizador versionado: `description_raw` → `merchant_key` com os casos reais da spec (R5)
+- [x] Extração de parcela `n/N` nos dois estilos: ` - Parcela 4/4` (Nubank) e `09/12` colado (Itaú)
+- [x] Competência: regra Nubank, regra Itaú e ajuste de antecipação (R3, Q14)
+- [x] `dedup_key`: `external_id` quando existe; hash + ordinal quando não (R2)
+- [x] `installment_group_key`: `description_root` + N + mês da parcela 1 (pela data da linha, antes do ajuste de antecipação) + ordinal (R10, Q11, Q14)
 
 **Testes:** unitários para cada função, com os exemplos reais da spec (anonimizados).
 
 ### 1.3 Banco de dados (`repo/`)
-- [ ] Modelos SQLAlchemy do §8: `account`, `import_batch`, `transactions`, `transaction_source`, `category`, `merchant_memory`, `keyword_rule`, `installment_group_override`, `llm_cache`, `recurrence_override`
-- [ ] Alembic com a migração inicial e seed das 7 categorias
-- [ ] `account.external_account_id NOT NULL DEFAULT ''` (sem duplicar contas no SQLite)
-- [ ] Backup automático `VACUUM INTO backups/…` antes de cada importação, mantendo as 10 últimas
+- [x] Modelos SQLAlchemy do §8: `account`, `import_batch`, `transactions`, `transaction_source`, `category`, `merchant_memory`, `keyword_rule`, `installment_group_override`, `llm_cache`, `recurrence_override`
+- [x] Alembic com a migração inicial e seed das 7 categorias
+- [x] `account.external_account_id NOT NULL DEFAULT ''` (sem duplicar contas no SQLite)
+- [x] Backup automático `VACUUM INTO backups/…` antes de cada importação, mantendo as 10 últimas
 
 ### 1.4 Pipeline de importação + adapters do Nubank
-- [ ] Interface do adapter: `sniff(head: bytes) -> bool` e `parse(...) -> list[RawTransaction]`; registry que rejeita arquivos não reconhecidos
-- [ ] Adapter **Nubank cartão CSV** (Anexo A.1)
-- [ ] Adapter **OFX genérico** cobrindo a conta Nubank (Anexo A.2)
-- [ ] (P1) Adapter **Nubank conta CSV** (Anexo A.3)
-- [ ] Estágios `detect → parse → normalize → classify → keys → persist` (spec §7.2), com persistência em uma transação SQL por arquivo, gravando `transaction_source` também para as duplicatas
-- [ ] Estratégia 0 (regras estruturais) já ligada ao estágio `classify`: crédito na conta, pagamento de fatura (R4, R6)
-- [ ] Estorno como despesa negativa; IOF com o `merchant_key` da compra (Q9, Q10)
+- [x] Interface do adapter: `sniff(head: bytes) -> bool` e `parse(...) -> list[RawTransaction]`; registry que rejeita arquivos não reconhecidos
+- [x] Adapter **Nubank cartão CSV** (Anexo A.1)
+- [x] Adapter **OFX genérico** cobrindo a conta Nubank (Anexo A.2)
+- [x] (P1) Adapter **Nubank conta CSV** (Anexo A.3)
+- [x] Estágios `detect → parse → normalize → classify → keys → persist` (spec §7.2), com persistência em uma transação SQL por arquivo, gravando `transaction_source` também para as duplicatas
+- [x] Estratégia 0 (regras estruturais) já ligada ao estágio `classify`: crédito na conta, pagamento de fatura (R4, R6)
+- [x] Estorno como despesa negativa; IOF com o `merchant_key` da compra (Q9, Q10)
 
 **Testes:**
 - golden test por adapter, com fixtures anonimizadas em `backend/tests/fixtures/`;
@@ -72,15 +72,15 @@ Objetivo: importar os 4 formatos com competência, deduplicação e marcação e
 - sanidade do R4: o pagamento da fatura não conta como despesa.
 
 ### 1.5 Adapters do Itaú (PDF)
-- [ ] Dependência de extração de PDF (ex.: `pdfplumber`)
-- [ ] Adapter **Itaú conta PDF** (Anexo A.6.1): tabela de coluna única, data de lançamento, valor com sinal
-- [ ] Adapter **Itaú cartão PDF** (Anexo A.6.2):
-  - [ ] extração por coluna, sem intercalar as duas colunas da página
-  - [ ] seções "compras e saques" e "produtos e serviços"; ignora "próximas faturas", resumo e simulações
-  - [ ] ano inferido pela data de fechamento
-  - [ ] `bank_category` preenchida a partir da linha de categoria
-  - [ ] **conferência contra "Total dos lançamentos atuais"**; arquivo rejeitado se não bater
-- [ ] Antecipação: parcelas do mesmo grupo no mesmo arquivo → competência da menor parcela (Q14)
+- [x] Dependência de extração de PDF (ex.: `pdfplumber`)
+- [x] Adapter **Itaú conta PDF** (Anexo A.6.1): tabela de coluna única, data de lançamento, valor com sinal
+- [x] Adapter **Itaú cartão PDF** (Anexo A.6.2):
+  - [x] extração por coluna, sem intercalar as duas colunas da página
+  - [x] seções "compras e saques" e "produtos e serviços"; ignora "próximas faturas", resumo e simulações
+  - [x] ano inferido pela data de fechamento
+  - [x] `bank_category` preenchida a partir da linha de categoria
+  - [x] **conferência contra "Total dos lançamentos atuais"**; arquivo rejeitado se não bater
+- [x] Antecipação: parcelas do mesmo grupo no mesmo arquivo → competência da menor parcela (Q14)
 
 **Testes:** golden tests com PDFs de fixture **gerados com dados inventados** (nunca os PDFs reais, que têm dados de terceiros); teste de rejeição por total divergente; teste de antecipação + estorno no mesmo mês.
 

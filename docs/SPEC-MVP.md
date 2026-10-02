@@ -274,7 +274,7 @@ backend/   (FastAPI)
     api/            # rotas finas; DTOs Pydantic
     ingestion/
       adapters/     # NubankCardCsv, OfxAdapter, ... → list[RawTransaction]
-      registry.py   # cada adapter expõe sniff(head: bytes) -> bool; nenhum casou → rejeita
+      registry.py   # cada adapter expõe sniff(head: bytes) -> bool, ou sniff_text(1ª página) para PDF; nenhum casou → rejeita
       pipeline.py   # orquestra os estágios do 7.2
     domain/         # puro: dinheiro, competência, dedup_key, parcelas, normalizador
     classification/ # interface Strategy + pipeline: memória, regras, classificador, Gemini
