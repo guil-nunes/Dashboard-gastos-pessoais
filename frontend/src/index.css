@@ -1,0 +1,91 @@
+/* Estilo mínimo provisório; a biblioteca de UI é escolhida na etapa 1.6. */
+:root {
+  --text: #3f3a46;
+  --text-h: #08060d;
+  --muted: #6b6375;
+  --bg: #fff;
+  --border: #e5e4e7;
+  --accent: #6d28d9;
+  --ok: #15803d;
+  --error: #b91c1c;
+
+  font: 16px/1.5 system-ui, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light dark;
+  color: var(--text);
+  background: var(--bg);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #d1d5db;
+    --text-h: #f3f4f6;
+    --muted: #9ca3af;
+    --bg: #16171d;
+    --border: #2e303a;
+    --accent: #c084fc;
+    --ok: #4ade80;
+    --error: #f87171;
+  }
+}
+
+body {
+  margin: 0;
+}
+
+.layout {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.layout-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.layout-nav {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.layout-nav a {
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.layout-nav a.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.layout-main {
+  padding: 24px 0;
+}
+
+h1 {
+  color: var(--text-h);
+  margin: 0 0 8px;
+}
+
+.placeholder-note {
+  color: var(--muted);
+}
+
+.health {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+.health[data-status='ok'] {
+  color: var(--ok);
+}
+
+.health[data-status='indisponível'] {
+  color: var(--error);
+}

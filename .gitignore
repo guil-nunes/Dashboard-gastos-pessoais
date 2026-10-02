@@ -14,7 +14,9 @@ samples/
 # Exceção: fixtures anonimizadas usadas nos testes
 !backend/tests/fixtures/**
 
-# Banco de dados local
+# Banco de dados local e backups
+data/
+backups/
 *.db
 *.sqlite
 *.sqlite3
@@ -26,6 +28,7 @@ samples/
 
 # Python
 __pycache__/
+*.egg-info/
 *.py[cod]
 .venv/
 venv/
@@ -49,3 +52,7 @@ Thumbs.db
 
 # Instruções locais do agente
 AGENTS.md
+.mcp.json
+
+# Saídas do Playwright MCP (screenshots, snapshots)
+.playwright-mcp/

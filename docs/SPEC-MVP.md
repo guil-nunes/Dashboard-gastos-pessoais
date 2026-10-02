@@ -291,6 +291,8 @@ backups/           # cópias automáticas do banco (não versionadas)
 
 ### 7.4 Endpoints
 
+Todas as rotas ficam sob o prefixo **`/api`** (ex.: `POST /api/imports`). Isso simplifica o proxy do Vite em dev e deixa a raiz livre para o FastAPI servir o `frontend/dist` (§7.5). A tabela abaixo omite o prefixo. Há também `GET /api/health`, usado pelo frontend para indicar se a API está no ar.
+
 | Método | Rota | Uso |
 |---|---|---|
 | `POST` | `/imports` | Upload de um ou mais arquivos. Responde **por arquivo** (novas / duplicadas / erro / rejeitado) com 200, mesmo que algum arquivo seja rejeitado |
