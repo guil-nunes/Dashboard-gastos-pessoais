@@ -31,11 +31,11 @@ Fase 1 ──► Fase 2 ──► Fase 3 ──► Fase 4
 Objetivo: importar os 4 formatos com competência, deduplicação e marcação estrutural corretas. A Fase 1 é dividida em etapas para validar o pipeline com os formatos simples antes dos PDFs.
 
 ### 1.1 Fundação do repositório
-- [ ] Estrutura `backend/` conforme spec §7.3 (`api/`, `ingestion/`, `domain/`, `classification/`, `analytics/`, `repo/`)
-- [ ] Gerenciamento de dependências e ambiente virtual; lint/format (ex.: ruff) e `pytest`
-- [ ] Configuração por `.env` + `.env.example` (caminho do banco, nº de backups, parâmetros futuros)
-- [ ] `frontend/` com React + Vite, proxy para o backend em dev (spec §7.5)
-- [ ] README com como rodar backend, frontend e testes
+- [x] Estrutura `backend/` conforme spec §7.3 (`api/`, `ingestion/`, `domain/`, `classification/`, `analytics/`, `repo/`)
+- [x] Gerenciamento de dependências e ambiente virtual; lint/format (ex.: ruff) e `pytest`
+- [x] Configuração por `.env` + `.env.example` (caminho do banco, nº de backups, parâmetros futuros)
+- [x] `frontend/` com React + Vite, proxy para o backend em dev (spec §7.5)
+- [x] README com como rodar backend, frontend e testes
 
 **Pronto quando:** `pytest` e o frontend sobem do zero seguindo o README.
 
