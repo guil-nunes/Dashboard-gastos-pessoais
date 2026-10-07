@@ -14,6 +14,7 @@ dependencies = [
     "sqlalchemy>=2.0",
     "alembic>=1.13",
     "pdfplumber>=0.11",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +34,9 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.flake8-bugbear]
+extend-immutable-calls = ["fastapi.Depends"]
 
 [tool.ruff.lint.per-file-ignores]
 # Migrações são geradas pelo Alembic; os CHECK longos não quebram em linhas.

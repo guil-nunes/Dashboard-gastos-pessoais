@@ -85,11 +85,11 @@ Objetivo: importar os 4 formatos com competência, deduplicação e marcação e
 **Testes:** golden tests com PDFs de fixture **gerados com dados inventados** (nunca os PDFs reais, que têm dados de terceiros); teste de rejeição por total divergente; teste de antecipação + estorno no mesmo mês.
 
 ### 1.6 API e tela de importação
-- [ ] `POST /imports` (vários arquivos, resposta por arquivo), `GET /imports`, `DELETE /imports/{id}` (spec §7.4)
-- [ ] Desfazer remove apenas transações sem outra origem em `transaction_source`
-- [ ] Na primeira importação de uma conta, informar o titular (`account.holder`, Q15)
-- [ ] Tela **Importar**: arrastar arquivos, ver o resumo (novas / duplicadas / erro / rejeitado) e desfazer
-- [ ] Tipos TypeScript gerados do OpenAPI
+- [x] `POST /imports` (vários arquivos, resposta por arquivo), `GET /imports`, `DELETE /imports/{id}` (spec §7.4)
+- [x] Desfazer remove apenas transações sem outra origem em `transaction_source`
+- [x] Na primeira importação de uma conta, informar o titular (`account.holder`, Q15)
+- [x] Tela **Importar**: arrastar arquivos, ver o resumo (novas / duplicadas / erro / rejeitado) e desfazer
+- [x] Tipos TypeScript gerados do OpenAPI
 
 **Testes:** desfazer com lotes sobrepostos (desfazer A ≡ importar só B).
 

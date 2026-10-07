@@ -89,3 +89,55 @@ h1 {
 .health[data-status='indisponível'] {
   color: var(--error);
 }
+
+.dropzone {
+  display: block;
+  padding: 32px 16px;
+  margin: 16px 0;
+  text-align: center;
+  color: var(--muted);
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.dropzone[data-dragging='true'] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 24px;
+}
+
+th,
+td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+tr[data-status='rejeitado'] td,
+tr[data-status='erro'] td,
+.error {
+  color: var(--error);
+}
+
+.note {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.holder-form {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}

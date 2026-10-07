@@ -27,6 +27,9 @@ class ImportResult:
     rows_error: int = 0
     errors: list[RowError] = field(default_factory=list)
     message: str | None = None
+    account_id: int | None = None
+    account_name: str | None = None
+    needs_holder: bool = False  # conta ainda sem titular (Q15)
 
 
 def import_files(
@@ -57,11 +60,15 @@ def persist(session: Session, prepared: PreparedFile, now: datetime) -> ImportRe
     """Grava o arquivo preparado e faz commit; em caso de erro, quem chama faz rollback."""
     existing_batch = repo.find_batch_id(session, prepared.file_sha256)
     if existing_batch is not None:
+        account = repo.get_batch_account(session, existing_batch)
         return ImportResult(
             prepared.filename,
             "ja_importado",
             batch_id=existing_batch,
             message="arquivo já importado",
+            account_id=account.id,
+            account_name=account.name,
+            needs_holder=account.holder is None,
         )
 
     info = prepared.account
@@ -112,6 +119,9 @@ def persist(session: Session, prepared: PreparedFile, now: datetime) -> ImportRe
         rows_duplicate=batch.rows_duplicate,
         rows_error=batch.rows_error,
         errors=prepared.errors,
+        account_id=account.id,
+        account_name=account.name,
+        needs_holder=account.holder is None,
     )
 
 

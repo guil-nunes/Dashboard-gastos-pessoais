@@ -21,10 +21,81 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/imports": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Imports */
+        get: operations["get_imports_api_imports_get"];
+        put?: never;
+        /** Post Imports */
+        post: operations["post_imports_api_imports_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/imports/{batch_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Import */
+        delete: operations["delete_import_api_imports__batch_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/accounts/{account_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Account */
+        patch: operations["patch_account_api_accounts__account_id__patch"];
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AccountDTO */
+        AccountDTO: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Holder */
+            holder: string | null;
+        };
+        /** Body_post_imports_api_imports_post */
+        Body_post_imports_api_imports_post: {
+            /** Files */
+            files: string[];
+        };
+        /** HTTPValidationError */
+        HTTPValidationError: {
+            /** Detail */
+            detail?: components["schemas"]["ValidationError"][];
+        };
         /** HealthResponse */
         HealthResponse: {
             /**
@@ -32,6 +103,85 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** HolderUpdate */
+        HolderUpdate: {
+            /** Holder */
+            holder: string;
+        };
+        /** ImportBatchDTO */
+        ImportBatchDTO: {
+            /** Id */
+            id: number;
+            /** Filename */
+            filename: string;
+            /**
+             * Imported At
+             * Format: date-time
+             */
+            imported_at: string;
+            /** Account Id */
+            account_id: number;
+            /** Account Name */
+            account_name: string;
+            /** Holder */
+            holder: string | null;
+            /** Rows Total */
+            rows_total: number;
+            /** Rows New */
+            rows_new: number;
+            /** Rows Duplicate */
+            rows_duplicate: number;
+            /** Rows Error */
+            rows_error: number;
+        };
+        /** ImportResultDTO */
+        ImportResultDTO: {
+            /** Filename */
+            filename: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "importado" | "ja_importado" | "rejeitado" | "erro";
+            /** Batch Id */
+            batch_id: number | null;
+            /** Rows New */
+            rows_new: number;
+            /** Rows Duplicate */
+            rows_duplicate: number;
+            /** Rows Error */
+            rows_error: number;
+            /** Errors */
+            errors: components["schemas"]["RowErrorDTO"][];
+            /** Message */
+            message: string | null;
+            /** Account Id */
+            account_id: number | null;
+            /** Account Name */
+            account_name: string | null;
+            /** Needs Holder */
+            needs_holder: boolean;
+        };
+        /** RowErrorDTO */
+        RowErrorDTO: {
+            /** Line No */
+            line_no: number;
+            /** Reason */
+            reason: string;
+        };
+        /** ValidationError */
+        ValidationError: {
+            /** Location */
+            loc: (string | number)[];
+            /** Message */
+            msg: string;
+            /** Error Type */
+            type: string;
+            /** Input */
+            input?: unknown;
+            /** Context */
+            ctx?: Record<string, never>;
         };
     };
     responses: never;
@@ -58,6 +208,123 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HealthResponse"];
+                };
+            };
+        };
+    };
+    get_imports_api_imports_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportBatchDTO"][];
+                };
+            };
+        };
+    };
+    post_imports_api_imports_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": components["schemas"]["Body_post_imports_api_imports_post"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ImportResultDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_import_api_imports__batch_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                batch_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_account_api_accounts__account_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                account_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["HolderUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AccountDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };
