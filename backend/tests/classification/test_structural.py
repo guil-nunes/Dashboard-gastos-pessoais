@@ -1,12 +1,13 @@
 import pytest
 
-from app.classification.base import Classification, ClassificationInput
-from app.classification.pipeline import UNCLASSIFIED, classify
+from app.classification.base import Classification, ClassificationInput, ClassifierContext
+from app.classification.pipeline import UNCLASSIFIED, build_strategies, classify
 from app.classification.structural import StructuralRules
 from app.domain.normalizer import normalize_merchant
 
 PIX_RECEIVED = "Transferência recebida pelo Pix - FULANO DE TAL - •••.123.456-•• - BCO EXEMPLO"
 PIX_SENT = "Transferência enviada pelo Pix - FULANO DE TAL - •••.123.456-•• - BCO EXEMPLO"
+STRATEGIES = build_strategies(ClassifierContext())
 
 
 def _item(kind: str, cents: int, description: str) -> ClassificationInput:
@@ -32,7 +33,7 @@ def _ignored(reason: str) -> Classification:
     ],
 )
 def test_structural_rules(item, expected):
-    assert classify(item) == expected
+    assert classify(item, STRATEGIES) == expected
 
 
 @pytest.mark.parametrize(
@@ -46,7 +47,11 @@ def test_structural_rules(item, expected):
 )
 def test_other_transactions_fall_through_as_unclassified_expense(item):
     assert StructuralRules().classify(item) is None
-    assert classify(item) == UNCLASSIFIED == Classification(kind="despesa", source="nenhuma")
+    assert (
+        classify(item, STRATEGIES)
+        == UNCLASSIFIED
+        == Classification(kind="despesa", source="nenhuma")
+    )
 
 
 class _RememberedExpense:

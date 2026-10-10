@@ -27,6 +27,7 @@ BANKS = ("nubank", "itau")
 ACCOUNT_KINDS = ("conta", "cartao")
 TRANSACTION_KINDS = ("despesa", "ignorar")
 IGNORE_REASONS = ("pagamento_fatura", "transferencia_interna", "investimento", "receita", "outro")
+MEMORY_IGNORE_REASONS = tuple(r for r in IGNORE_REASONS if r != "investimento")
 CATEGORY_SOURCES = ("memoria", "regra", "classificador", "gemini", "manual", "nenhuma")
 STATUSES = ("real", "projetada")
 MATCH_TYPES = ("contains", "regex")
@@ -147,12 +148,26 @@ class InstallmentGroupOverride(Base):
 
 class MerchantMemory(Base):
     __tablename__ = "merchant_memory"
-    __table_args__ = (_one_of("kind", TRANSACTION_KINDS),)
+    __table_args__ = (
+        _one_of("kind", TRANSACTION_KINDS),
+        _one_of("ignore_reason", MEMORY_IGNORE_REASONS),
+    )
 
     merchant_key: Mapped[str] = mapped_column(String, primary_key=True)
     category_id: Mapped[int | None] = mapped_column(ForeignKey("category.id", ondelete="SET NULL"))
     kind: Mapped[str | None] = mapped_column(String)
+    # Motivo lembrado quando kind = 'ignorar'; nunca 'investimento' (Q15).
+    ignore_reason: Mapped[str | None] = mapped_column(String)
     updated_at: Mapped[datetime] = mapped_column(DateTime)
+
+
+class BankCategoryMap(Base):
+    """Mapa editável da categoria do banco para as nossas (Q16, estratégia 3 do R6)."""
+
+    __tablename__ = "bank_category_map"
+
+    bank_category: Mapped[str] = mapped_column(String, primary_key=True)
+    category_id: Mapped[int | None] = mapped_column(ForeignKey("category.id", ondelete="SET NULL"))
 
 
 class KeywordRule(Base):

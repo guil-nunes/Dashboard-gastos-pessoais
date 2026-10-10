@@ -48,6 +48,7 @@ O esquema é versionado com Alembic, em `backend/migrations/`. Rode os comandos 
 | Ver em que versão o banco está | `alembic current` |
 | Gerar uma migração depois de mudar `app/repo/models.py` | `alembic revision --autogenerate -m "descrição"` (revise o arquivo gerado) |
 | Conferir se modelos e migrações estão em dia | `alembic check` |
+| Recalcular os `merchant_key` depois de mudar o normalizador (faz backup antes) | `python -m app.cli renormalize` |
 
 Antes de cada importação, uma cópia do banco é salva em `backups/AAAA-MM-DD_HHMMSS.db`, mantendo as 10 mais recentes (`BACKUPS_KEEP` no `.env`). Para voltar a uma cópia, feche a API e copie o arquivo do backup sobre `data/gastos.db`.
 
@@ -70,6 +71,19 @@ npm install
 Em desenvolvimento, o Vite repassa as chamadas a `/api` para o backend em `localhost:8000`. Suba os dois para usar o app; o indicador "API: ok" no topo da página confirma a conexão.
 
 Os tipos TypeScript da API ficam em `frontend/src/api/schema.d.ts` e são gerados a partir do OpenAPI do backend. Não edite esse arquivo à mão: rode `npm run gen:api` sempre que uma rota mudar.
+
+## Uso real (um comando)
+
+Com o frontend buildado, o FastAPI serve a interface e a API na mesma porta, sem Vite:
+
+```powershell
+cd frontend
+npm run build          # só na primeira vez e depois de mudar o frontend
+cd ../backend
+python -m app.cli serve    # migra o banco e sobe em http://127.0.0.1:8000
+```
+
+`--host` e `--port` ajustam o endereço. Se `frontend/dist` não existir, a API sobe sozinha e o comando avisa.
 
 ## Dados pessoais
 

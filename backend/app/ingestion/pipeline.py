@@ -14,6 +14,7 @@ from sqlalchemy.orm import Session
 from app.ingestion.prepare import PreparedFile, PreparedTransaction, prepare
 from app.ingestion.types import RejectedFile, RowError
 from app.repo import imports as repo
+from app.repo.classification import holder_of, load_context
 from app.repo.models import ImportBatch, Transaction, TransactionSource
 
 
@@ -46,7 +47,12 @@ def import_files(
 def import_file(session: Session, filename: str, content: bytes, now: datetime) -> ImportResult:
     """Atômica por arquivo: rejeitado ou com erro, nada dele fica gravado."""
     try:
-        prepared = prepare(filename, content)
+        prepared = prepare(
+            filename,
+            content,
+            load_context(session),
+            lambda info: holder_of(session, info.bank, info.kind, info.external_account_id),
+        )
     except RejectedFile as error:
         return ImportResult(filename, "rejeitado", message=str(error))
     try:

@@ -102,22 +102,22 @@ Objetivo: importar os 4 formatos com competência, deduplicação e marcação e
 Objetivo: toda transação sai da importação com tipo e categoria sugeridos, e a revisão é rápida.
 
 ### 2.1 Pipeline de estratégias (`classification/`)
-- [ ] Interface `Strategy` → `Classification(kind, ignore_reason, category, source, confidence, suggested_ignore_reason)` (R6)
-- [ ] Estratégia 0: regras estruturais (já da Fase 1)
-- [ ] Estratégia 1: memória por `merchant_key`, sem aplicar `investimento` automaticamente (Q15)
-- [ ] Estratégia 2: regras de palavra-chave, com seed inicial (ex.: `Ifd*` → Alimentação, `Uber` → Transporte)
-- [ ] Estratégia 3: categoria do banco, baixa confiança, com mapa editável (Q16)
-- [ ] Sugestão de investimento para saídas ao mesmo titular e `APLICACAO COFRINHOS` (Q15)
-- [ ] Correção manual atualiza a memória e recategoriza as não revisadas do mesmo estabelecimento; revisadas nunca são sobrescritas
-- [ ] Comando `renormalize` para quando o normalizador mudar de versão (R5)
+- [x] Interface `Strategy` → `Classification(kind, ignore_reason, category, source, confidence, suggested_ignore_reason)` (R6)
+- [x] Estratégia 0: regras estruturais (já da Fase 1)
+- [x] Estratégia 1: memória por `merchant_key`, sem aplicar `investimento` automaticamente (Q15)
+- [x] Estratégia 2: regras de palavra-chave, com seed inicial (ex.: `Ifd*` → Alimentação, `Uber` → Transporte)
+- [x] Estratégia 3: categoria do banco, baixa confiança, com mapa editável (Q16)
+- [x] Sugestão de investimento para saídas ao mesmo titular e `APLICACAO COFRINHOS` (Q15)
+- [x] Correção manual atualiza a memória e recategoriza as não revisadas do mesmo estabelecimento; revisadas nunca são sobrescritas
+- [x] Comando `renormalize` para quando o normalizador mudar de versão (R5)
 
 **Testes:** Pix recebido de alguém com memória de despesa continua `ignorar/receita`; revisadas não mudam ao reimportar; investimento nunca é aplicado sem confirmação.
 
 ### 2.2 API e tela de revisão
-- [ ] `GET /transactions` com filtros; `PATCH /transactions/{id}` (corrigir ou confirmar)
-- [ ] `GET /merchants?pending=true` e `POST /transactions/bulk-categorize` (R7)
-- [ ] CRUD de `/categories` e `/rules`
-- [ ] Tela **Revisar**: fila de pendentes e baixa confiança, agrupada por estabelecimento; aplicar ou confirmar em lote; confirmar sugestão de investimento em um clique
+- [x] `GET /transactions` com filtros; `PATCH /transactions/{id}` (corrigir ou confirmar)
+- [x] `GET /merchants?pending=true` e `POST /transactions/bulk-categorize` (R7)
+- [x] CRUD de `/categories` e `/rules`
+- [x] Tela **Revisar**: fila de pendentes e baixa confiança, agrupada por estabelecimento; aplicar ou confirmar em lote; confirmar sugestão de investimento em um clique
 
 **Pronto quando:** a carga histórica inteira pode ser revisada em lote, e reimportar não desfaz nenhuma revisão.
 
@@ -127,16 +127,16 @@ Objetivo: toda transação sai da importação com tipo e categoria sugeridos, e
 
 Objetivo: fechar o mês. **Ao fim desta fase, fazer o primeiro fechamento real e medir o tempo** (meta ≤ 15 min, spec §10).
 
-- [ ] `GET /dashboard/summary?month=` e `GET /dashboard/history` (só `status = 'real'` e `kind = 'despesa'`)
-- [ ] Tela **Dashboard** (R8):
-  - [ ] seletor de mês de competência
-  - [ ] total do mês e variação vs. mês anterior (R$ e %)
-  - [ ] despesas por categoria (valor e %)
-  - [ ] histórico mensal, total e por categoria
-  - [ ] filtros por banco e por tipo (conta / cartão)
-  - [ ] drill-down da categoria para as transações
-  - [ ] estado vazio orientando a primeira importação
-- [ ] FastAPI servindo o `frontend/dist`; um comando sobe tudo (spec §7.5)
+- [x] `GET /dashboard/summary?month=` e `GET /dashboard/history` (só `status = 'real'` e `kind = 'despesa'`)
+- [x] Tela **Dashboard** (R8):
+  - [x] seletor de mês de competência
+  - [x] total do mês e variação vs. mês anterior (R$ e %)
+  - [x] despesas por categoria (valor e %)
+  - [x] histórico mensal, total e por categoria
+  - [x] filtros por banco e por tipo (conta / cartão)
+  - [x] drill-down da categoria para as transações
+  - [x] estado vazio orientando a primeira importação
+- [x] FastAPI servindo o `frontend/dist`; um comando sobe tudo (spec §7.5)
 
 **Pronto quando:** um mês fechado bate com a soma manual das faturas e extratos, descontando os itens ignorados.
 

@@ -73,6 +73,182 @@ export interface paths {
         patch: operations["patch_account_api_accounts__account_id__patch"];
         trace?: never;
     };
+    "/api/transactions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Transactions */
+        get: operations["get_transactions_api_transactions_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/transactions/{transaction_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Transaction */
+        patch: operations["patch_transaction_api_transactions__transaction_id__patch"];
+        trace?: never;
+    };
+    "/api/transactions/bulk-categorize": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Bulk Categorize */
+        post: operations["bulk_categorize_api_transactions_bulk_categorize_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/merchants": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Merchants
+         * @description Pendentes agrupados por `merchant_key` (R7). Só a visão de pendentes existe por ora.
+         */
+        get: operations["get_merchants_api_merchants_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/categories": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Categories */
+        get: operations["get_categories_api_categories_get"];
+        put?: never;
+        /** Post Category */
+        post: operations["post_category_api_categories_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/categories/{category_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Patch Category */
+        patch: operations["patch_category_api_categories__category_id__patch"];
+        trace?: never;
+    };
+    "/api/rules": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Rules */
+        get: operations["get_rules_api_rules_get"];
+        put?: never;
+        /** Post Rule */
+        post: operations["post_rule_api_rules_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/rules/{rule_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Rule */
+        delete: operations["delete_rule_api_rules__rule_id__delete"];
+        options?: never;
+        head?: never;
+        /** Patch Rule */
+        patch: operations["patch_rule_api_rules__rule_id__patch"];
+        trace?: never;
+    };
+    "/api/dashboard/summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Summary */
+        get: operations["get_summary_api_dashboard_summary_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/dashboard/history": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get History */
+        get: operations["get_history_api_dashboard_history_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -91,6 +267,74 @@ export interface components {
             /** Files */
             files: string[];
         };
+        /** BulkRequest */
+        BulkRequest: {
+            /** Merchant Key */
+            merchant_key: string;
+            /**
+             * Action
+             * @enum {string}
+             */
+            action: "confirm" | "apply";
+            /** Kind */
+            kind?: ("despesa" | "ignorar") | null;
+            /** Ignore Reason */
+            ignore_reason?: string | null;
+            /** Category Id */
+            category_id?: number | null;
+            /** Transaction Ids */
+            transaction_ids?: number[] | null;
+        };
+        /** BulkResultDTO */
+        BulkResultDTO: {
+            /** Affected */
+            affected: number;
+        };
+        /** CategoryCreate */
+        CategoryCreate: {
+            /** Name */
+            name: string;
+            /**
+             * Color
+             * @default #757575
+             */
+            color: string;
+        };
+        /** CategoryDTO */
+        CategoryDTO: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Color */
+            color: string;
+            /** Is Active */
+            is_active: boolean;
+        };
+        /** CategoryTotalDTO */
+        CategoryTotalDTO: {
+            /** Category Id */
+            category_id: number | null;
+            /** Name */
+            name: string;
+            /** Color */
+            color: string | null;
+            /** Total Cents */
+            total_cents: number;
+            /** Count */
+            count: number;
+            /** Pct */
+            pct: number | null;
+        };
+        /** CategoryUpdate */
+        CategoryUpdate: {
+            /** Name */
+            name?: string | null;
+            /** Color */
+            color?: string | null;
+            /** Is Active */
+            is_active?: boolean | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -103,6 +347,38 @@ export interface components {
              * @constant
              */
             status: "ok";
+        };
+        /** HistoryCategoryDTO */
+        HistoryCategoryDTO: {
+            /** Id */
+            id: number;
+            /** Name */
+            name: string;
+            /** Color */
+            color: string;
+        };
+        /** HistoryDTO */
+        HistoryDTO: {
+            /** Months */
+            months: components["schemas"]["HistoryMonthDTO"][];
+            /** Categories */
+            categories: components["schemas"]["HistoryCategoryDTO"][];
+        };
+        /** HistoryMonthDTO */
+        HistoryMonthDTO: {
+            /** Month */
+            month: string;
+            /** Total Cents */
+            total_cents: number;
+            /** By Category */
+            by_category: components["schemas"]["HistoryValueDTO"][];
+        };
+        /** HistoryValueDTO */
+        HistoryValueDTO: {
+            /** Category Id */
+            category_id: number | null;
+            /** Total Cents */
+            total_cents: number;
         };
         /** HolderUpdate */
         HolderUpdate: {
@@ -163,12 +439,168 @@ export interface components {
             /** Needs Holder */
             needs_holder: boolean;
         };
+        /** PendingMerchantDTO */
+        PendingMerchantDTO: {
+            /** Merchant Key */
+            merchant_key: string;
+            /** Count */
+            count: number;
+            /** Total Cents */
+            total_cents: number;
+            /** Sample Description */
+            sample_description: string;
+            /** Category Id */
+            category_id: number | null;
+            /** Category Source */
+            category_source: string | null;
+            /** Min Confidence */
+            min_confidence: number | null;
+            /** Suggested Ignore Reason */
+            suggested_ignore_reason: string | null;
+            /**
+             * Latest On
+             * Format: date
+             */
+            latest_on: string;
+        };
         /** RowErrorDTO */
         RowErrorDTO: {
             /** Line No */
             line_no: number;
             /** Reason */
             reason: string;
+        };
+        /** RuleCreate */
+        RuleCreate: {
+            /** Pattern */
+            pattern: string;
+            /**
+             * Match Type
+             * @default contains
+             * @enum {string}
+             */
+            match_type: "contains" | "regex";
+            /** Category Id */
+            category_id: number;
+            /**
+             * Priority
+             * @default 100
+             */
+            priority: number;
+        };
+        /** RuleDTO */
+        RuleDTO: {
+            /** Id */
+            id: number;
+            /** Pattern */
+            pattern: string;
+            /**
+             * Match Type
+             * @enum {string}
+             */
+            match_type: "contains" | "regex";
+            /** Category Id */
+            category_id: number | null;
+            /** Priority */
+            priority: number;
+        };
+        /** RuleUpdate */
+        RuleUpdate: {
+            /** Pattern */
+            pattern?: string | null;
+            /** Match Type */
+            match_type?: ("contains" | "regex") | null;
+            /** Category Id */
+            category_id?: number | null;
+            /** Priority */
+            priority?: number | null;
+        };
+        /** SummaryDTO */
+        SummaryDTO: {
+            /** Month */
+            month: string;
+            /** Total Cents */
+            total_cents: number;
+            /** Previous Month */
+            previous_month: string;
+            /** Previous Total Cents */
+            previous_total_cents: number;
+            /** Delta Cents */
+            delta_cents: number;
+            /** Delta Pct */
+            delta_pct: number | null;
+            /** Categories */
+            categories: components["schemas"]["CategoryTotalDTO"][];
+        };
+        /** TransactionDTO */
+        TransactionDTO: {
+            /** Id */
+            id: number;
+            /**
+             * Occurred On
+             * Format: date
+             */
+            occurred_on: string;
+            /** Competence Month */
+            competence_month: string;
+            /** Amount Cents */
+            amount_cents: number;
+            /** Description Raw */
+            description_raw: string;
+            /** Merchant Key */
+            merchant_key: string;
+            /** Account Id */
+            account_id: number;
+            /** Account Name */
+            account_name: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "despesa" | "ignorar";
+            /** Ignore Reason */
+            ignore_reason: string | null;
+            /** Suggested Ignore Reason */
+            suggested_ignore_reason: string | null;
+            /** Category Id */
+            category_id: number | null;
+            /** Category Source */
+            category_source: string;
+            /** Category Confidence */
+            category_confidence: number | null;
+            /** Reviewed At */
+            reviewed_at: string | null;
+            /** Status */
+            status: string;
+            /** Installment Number */
+            installment_number: number | null;
+            /** Installment Total */
+            installment_total: number | null;
+        };
+        /** TransactionPageDTO */
+        TransactionPageDTO: {
+            /** Items */
+            items: components["schemas"]["TransactionDTO"][];
+            /** Total */
+            total: number;
+        };
+        /**
+         * TransactionPatch
+         * @description `action = 'confirm'` confirma sem alterar; senão `kind` é obrigatório (correção).
+         */
+        TransactionPatch: {
+            /**
+             * Action
+             * @default apply
+             * @enum {string}
+             */
+            action: "confirm" | "apply";
+            /** Kind */
+            kind?: ("despesa" | "ignorar") | null;
+            /** Ignore Reason */
+            ignore_reason?: string | null;
+            /** Category Id */
+            category_id?: number | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -316,6 +748,418 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["AccountDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_transactions_api_transactions_get: {
+        parameters: {
+            query?: {
+                month?: string | null;
+                account_id?: number | null;
+                category_id?: number | null;
+                source?: string | null;
+                merchant_key?: string | null;
+                kind?: ("despesa" | "ignorar") | null;
+                status?: ("real" | "projetada") | null;
+                bank?: ("nubank" | "itau") | null;
+                account_kind?: ("conta" | "cartao") | null;
+                without_category?: boolean;
+                pending?: boolean;
+                limit?: number;
+                offset?: number;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionPageDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_transaction_api_transactions__transaction_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                transaction_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TransactionPatch"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TransactionDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    bulk_categorize_api_transactions_bulk_categorize_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["BulkRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["BulkResultDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_merchants_api_merchants_get: {
+        parameters: {
+            query?: {
+                pending?: boolean;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PendingMerchantDTO"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_categories_api_categories_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryDTO"][];
+                };
+            };
+        };
+    };
+    post_category_api_categories_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_category_api_categories__category_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CategoryUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_rules_api_rules_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleDTO"][];
+                };
+            };
+        };
+    };
+    post_rule_api_rules_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleCreate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_rule_api_rules__rule_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    patch_rule_api_rules__rule_id__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                rule_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RuleUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RuleDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_summary_api_dashboard_summary_get: {
+        parameters: {
+            query: {
+                month: string;
+                bank?: ("nubank" | "itau") | null;
+                account_kind?: ("conta" | "cartao") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SummaryDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_history_api_dashboard_history_get: {
+        parameters: {
+            query?: {
+                bank?: ("nubank" | "itau") | null;
+                account_kind?: ("conta" | "cartao") | null;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HistoryDTO"];
                 };
             };
             /** @description Validation Error */

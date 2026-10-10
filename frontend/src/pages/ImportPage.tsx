@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import type { DragEvent, FormEvent } from 'react'
+import { errorDetail } from '../api/errors'
 import type { components } from '../api/schema'
 
 type ImportResult = components['schemas']['ImportResultDTO']
@@ -10,16 +11,6 @@ const STATUS_LABEL: Record<ImportResult['status'], string> = {
   ja_importado: 'Duplicado (arquivo já importado)',
   rejeitado: 'Rejeitado',
   erro: 'Erro',
-}
-
-async function errorDetail(response: Response): Promise<string> {
-  try {
-    const body = (await response.json()) as { detail?: unknown }
-    if (typeof body.detail === 'string') return body.detail
-  } catch {
-    // corpo sem JSON: usa o status
-  }
-  return `HTTP ${response.status}`
 }
 
 function HolderForm({ result, onSaved }: { result: ImportResult; onSaved: () => void }) {

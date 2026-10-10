@@ -1,20 +1,31 @@
 from collections.abc import Sequence
 
-from app.classification.base import Classification, ClassificationInput, Strategy
+from app.classification.bank_category import BankCategoryStrategy
+from app.classification.base import Classification, ClassificationInput, ClassifierContext, Strategy
+from app.classification.investment import with_investment_suggestion
+from app.classification.keyword import KeywordStrategy
+from app.classification.memory import MemoryStrategy
 from app.classification.structural import StructuralRules
-
-# Ordem do R6; as estratégias 1–3 entram na Fase 2.
-DEFAULT_STRATEGIES: list[Strategy] = [StructuralRules()]
 
 UNCLASSIFIED = Classification(kind="despesa", source="nenhuma")
 
 
-def classify(
-    item: ClassificationInput, strategies: Sequence[Strategy] = DEFAULT_STRATEGIES
-) -> Classification:
+def build_strategies(context: ClassifierContext) -> list[Strategy]:
+    """Ordem do R6: estrutural, memória, palavra-chave, categoria do banco."""
+    return [
+        StructuralRules(),
+        MemoryStrategy(context.memory),
+        KeywordStrategy(context.rules),
+        BankCategoryStrategy(context.bank_map),
+    ]
+
+
+def classify(item: ClassificationInput, strategies: Sequence[Strategy]) -> Classification:
     """A primeira estratégia que responder vence; sem resposta, despesa sem categoria."""
+    result = UNCLASSIFIED
     for strategy in strategies:
-        result = strategy.classify(item)
-        if result is not None:
-            return result
-    return UNCLASSIFIED
+        answer = strategy.classify(item)
+        if answer is not None:
+            result = answer
+            break
+    return with_investment_suggestion(item, result)

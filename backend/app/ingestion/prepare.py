@@ -1,12 +1,12 @@
 """Estágios puros da importação (spec §7.2): detect → parse → normalize → classify → keys."""
 
 import hashlib
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import date
 
-from app.classification.base import ClassificationInput
-from app.classification.pipeline import classify
+from app.classification.base import ClassificationInput, ClassifierContext
+from app.classification.pipeline import build_strategies, classify
 from app.domain.competence import apply_anticipation
 from app.domain.installments import InstallmentLine
 from app.domain.keys import (
@@ -56,10 +56,21 @@ class PreparedFile:
     errors: list[RowError]
 
 
-def prepare(filename: str, content: bytes) -> PreparedFile:
-    """Levanta `RejectedFile` se o arquivo não for reconhecido."""
+def prepare(
+    filename: str,
+    content: bytes,
+    context: ClassifierContext | None = None,
+    holder_of: Callable[[AccountInfo], str | None] | None = None,
+) -> PreparedFile:
+    """Levanta `RejectedFile` se o arquivo não for reconhecido.
+
+    `context` (memória, regras, mapa do banco) e `holder_of` chegam já carregados: o estágio
+    continua sem I/O. Sem eles, só valem as regras estruturais.
+    """
+    strategies = build_strategies(context or ClassifierContext())
     parsed = detect(content).parse(content, filename)
     account = parsed.account
+    holder = holder_of(account) if holder_of else None
     ref = account_ref(account.bank, account.kind, account.external_account_id)
     raws = parsed.transactions
 
@@ -78,7 +89,9 @@ def prepare(filename: str, content: bytes) -> PreparedFile:
                 description_raw=raw.description_raw,
                 merchant_key=merchant_key,
                 bank_category=raw.bank_category,
-            )
+                holder=holder,
+            ),
+            strategies,
         )
         if raw.external_id:
             dedup_key = dedup_key_external(ref, raw.external_id)

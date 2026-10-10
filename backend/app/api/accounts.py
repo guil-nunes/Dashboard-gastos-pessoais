@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
+from app.classification.service import reclassify_unreviewed
 from app.repo import imports as repo
 from app.repo.db import get_session
 
@@ -33,5 +34,6 @@ def patch_account(
     account = repo.set_holder(session, account_id, body.holder)
     if account is None:
         raise HTTPException(status_code=404, detail="Conta não encontrada")
+    reclassify_unreviewed(session, account_id=account.id)  # titular novo → sugestões de Q15
     session.commit()
     return AccountDTO(id=account.id, name=account.name, holder=account.holder)

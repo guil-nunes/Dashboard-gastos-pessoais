@@ -141,3 +141,154 @@ tr[data-status='erro'] td,
   border: 1px solid var(--border);
   border-radius: 8px;
 }
+
+.review-bulk,
+.review-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.review-bulk {
+  margin: 12px 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.review-transactions {
+  margin: 0;
+}
+
+.badge {
+  display: inline-block;
+  margin: 2px 4px 0 0;
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+}
+
+button.link {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.dashboard-filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 12px 0;
+}
+
+.kpi {
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--text-h);
+}
+
+.kpi-delta {
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.kpi-delta[data-direction='up'] {
+  color: var(--error);
+}
+
+.kpi-delta[data-direction='down'] {
+  color: var(--ok);
+}
+
+.swatch {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.share-bar {
+  height: 6px;
+  margin-top: 4px;
+  border-radius: 3px;
+}
+
+.history-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 200px;
+  padding: 8px 0;
+  overflow-x: auto;
+}
+
+.history-bar {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  align-items: stretch;
+  flex: 1 0 48px;
+  max-width: 96px;
+  height: 100%;
+  padding: 0;
+  font: inherit;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+
+.history-bar[data-selected='true'] {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.history-stack {
+  display: flex;
+  flex-direction: column-reverse;
+  min-height: 2px;
+}
+
+.history-segment {
+  min-height: 1px;
+}
+
+.history-month {
+  padding-top: 4px;
+  font-size: 12px;
+}
+
+.legend {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin: 8px 0 16px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+tr[data-selected='true'] td {
+  font-weight: 600;
+}

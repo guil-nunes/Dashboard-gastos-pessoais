@@ -14,10 +14,11 @@ class Settings(BaseSettings):
     database_path: Path = Path("data/gastos.db")
     backups_dir: Path = Path("backups")
     backups_keep: int = 10
+    frontend_dist: Path = Path("frontend/dist")
     gemini_enabled: bool = False
     gemini_api_key: str | None = None
 
-    @field_validator("database_path", "backups_dir")
+    @field_validator("database_path", "backups_dir", "frontend_dist")
     @classmethod
     def resolve_from_repo_root(cls, value: Path) -> Path:
         return value if value.is_absolute() else REPO_ROOT / value

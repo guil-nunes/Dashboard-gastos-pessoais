@@ -3,37 +3,15 @@
 from datetime import datetime
 
 import pytest
-from fastapi.testclient import TestClient
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
-from app.api.imports import get_backup
 from app.ingestion.pipeline import import_file
-from app.main import create_app
-from app.repo.db import get_session
 from app.repo.models import Transaction
 
 CARD_AUG = "nubank/Nubank_2026-09-08.csv"
 OFX_A = "nubank/NU_123456789_01SET2026_15SET2026.ofx"
 OFX_B = "nubank/NU_123456789_10SET2026_24SET2026.ofx"
-
-
-@pytest.fixture
-def backups():
-    return []
-
-
-@pytest.fixture
-def client(migrated_engine, backups):
-    app = create_app()
-
-    def session_override():
-        with Session(migrated_engine) as session:
-            yield session
-
-    app.dependency_overrides[get_session] = session_override
-    app.dependency_overrides[get_backup] = lambda: backups.append
-    return TestClient(app)
 
 
 def _upload(client, fixture_file, *relatives):

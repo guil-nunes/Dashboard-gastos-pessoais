@@ -9,9 +9,12 @@ from sqlalchemy.exc import IntegrityError
 
 from app.repo.models import (
     Account,
+    BankCategoryMap,
     Base,
     Category,
     ImportBatch,
+    KeywordRule,
+    MerchantMemory,
     Transaction,
     TransactionSource,
 )
@@ -27,6 +30,7 @@ TABLES = {
     "installment_group_override",
     "llm_cache",
     "recurrence_override",
+    "bank_category_map",
 }
 NOW = datetime(2026, 10, 1, 12, 0, 0)
 
@@ -90,6 +94,39 @@ def test_upgrade_seeds_initial_categories(session):
         "Dívidas",
     ]
     assert all(session.scalars(select(Category.is_active)))
+
+
+def test_upgrade_seeds_bank_category_map_and_keyword_rules(session):
+    bank_map = dict(
+        session.execute(
+            select(BankCategoryMap.bank_category, Category.name).join(
+                Category, Category.id == BankCategoryMap.category_id
+            )
+        ).all()
+    )
+    assert bank_map["SAÚDE"] == "Saúde e Bem-Estar"
+    assert bank_map["TURISMO E ENTRETENIM"] == "Lazer e Tecnologia"
+    assert "DIVERSOS" not in bank_map
+
+    rules = dict(
+        session.execute(
+            select(KeywordRule.pattern, Category.name).join(
+                Category, Category.id == KeywordRule.category_id
+            )
+        ).all()
+    )
+    assert rules["ifd*"] == "Alimentação"
+    assert rules["uber"] == "Transporte"
+
+
+def test_merchant_memory_rejects_investimento_reason(session):
+    session.add(
+        MerchantMemory(
+            merchant_key="X", kind="ignorar", ignore_reason="investimento", updated_at=NOW
+        )
+    )
+    with pytest.raises(IntegrityError):
+        session.commit()
 
 
 def test_models_match_migration(migrated_engine):
