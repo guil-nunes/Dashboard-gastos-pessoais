@@ -215,6 +215,23 @@ export interface paths {
         patch: operations["patch_rule_api_rules__rule_id__patch"];
         trace?: never;
     };
+    "/api/dashboard/floor": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Floor */
+        get: operations["get_floor_api_dashboard_floor_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/dashboard/summary": {
         parameters: {
             query?: never;
@@ -264,6 +281,40 @@ export interface paths {
         options?: never;
         head?: never;
         patch?: never;
+        trace?: never;
+    };
+    "/api/recurrences": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** List Recurrences */
+        get: operations["list_recurrences_api_recurrences_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/recurrences/{merchant_key}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Recurrence */
+        patch: operations["update_recurrence_api_recurrences__merchant_key__patch"];
         trace?: never;
     };
 }
@@ -372,6 +423,52 @@ export interface components {
             remaining: number;
             /** Amount Cents */
             amount_cents: number;
+        };
+        /** FloorDTO */
+        FloorDTO: {
+            /** Month */
+            month: string;
+            /** Target Month */
+            target_month: string;
+            /** Total Cents */
+            total_cents: number;
+            /** Installments Cents */
+            installments_cents: number;
+            /** Installments */
+            installments: components["schemas"]["FloorInstallmentDTO"][];
+            /** Recurrences Cents */
+            recurrences_cents: number;
+            /** Recurrences */
+            recurrences: components["schemas"]["FloorRecurrenceDTO"][];
+        };
+        /** FloorInstallmentDTO */
+        FloorInstallmentDTO: {
+            /** Group Key */
+            group_key: string;
+            /** Description */
+            description: string;
+            /** Number */
+            number: number;
+            /** Total */
+            total: number;
+            /** Amount Cents */
+            amount_cents: number;
+            /** Account Name */
+            account_name: string;
+        };
+        /** FloorRecurrenceDTO */
+        FloorRecurrenceDTO: {
+            /** Merchant Key */
+            merchant_key: string;
+            /** Description */
+            description: string;
+            /** Last Cents */
+            last_cents: number;
+            /**
+             * Last On
+             * Format: date
+             */
+            last_on: string;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -502,6 +599,31 @@ export interface components {
              * Format: date
              */
             latest_on: string;
+        };
+        /** RecurrenceDTO */
+        RecurrenceDTO: {
+            /** Merchant Key */
+            merchant_key: string;
+            /** Description */
+            description: string;
+            /** Average Cents */
+            average_cents: number;
+            /** Last Cents */
+            last_cents: number;
+            /**
+             * Last On
+             * Format: date
+             */
+            last_on: string;
+            /** Months Count */
+            months_count: number;
+            /** Dismissed */
+            dismissed: boolean;
+        };
+        /** RecurrenceUpdateDTO */
+        RecurrenceUpdateDTO: {
+            /** Is Recurring */
+            is_recurring: boolean;
         };
         /** RowErrorDTO */
         RowErrorDTO: {
@@ -1181,6 +1303,37 @@ export interface operations {
             };
         };
     };
+    get_floor_api_dashboard_floor_get: {
+        parameters: {
+            query: {
+                month: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FloorDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     get_summary_api_dashboard_summary_get: {
         parameters: {
             query: {
@@ -1262,6 +1415,61 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UpcomingDTO"];
+                };
+            };
+        };
+    };
+    list_recurrences_api_recurrences_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurrenceDTO"][];
+                };
+            };
+        };
+    };
+    update_recurrence_api_recurrences__merchant_key__patch: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                merchant_key: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["RecurrenceUpdateDTO"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["RecurrenceUpdateDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
                 };
             };
         };

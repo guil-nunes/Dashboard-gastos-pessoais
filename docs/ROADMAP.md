@@ -156,13 +156,13 @@ Objetivo: mostrar o que já está comprometido nos próximos meses.
 **Testes:** independência de ordem incluindo as projetadas; real substitui projetada; antecipação não gera grupo duplicado.
 
 ### 4.2 Recorrência (R9)
-- [ ] Detector: ≥ 3 ocorrências, 25–35 dias, ±10% da mediana; parâmetros em configuração
-- [ ] IOF somado à compra de origem; parcelas excluídas
-- [ ] `GET /recurrences`, `PATCH /recurrences/{merchant_key}` e tela **Recorrentes**
+- [x] Detector: ≥ 3 ocorrências, 25–35 dias, ±10% da mediana; parâmetros em configuração
+- [x] IOF somado à compra de origem; parcelas excluídas
+- [x] `GET /recurrences`, `PATCH /recurrences/{merchant_key}` e tela **Recorrentes**
 
 ### 4.3 Piso do próximo mês (R12)
-- [ ] `GET /dashboard/floor?month=`: projetadas + último valor de cada recorrente, cartão e conta
-- [ ] Card no dashboard com o detalhamento em parcelas e recorrentes
+- [x] `GET /dashboard/floor?month=`: projetadas + último valor de cada recorrente, cartão e conta
+- [x] Card no dashboard com o detalhamento em parcelas e recorrentes
 
 **Pronto quando:** o piso de um mês passado pode ser comparado com o gasto real daquele mês.
 

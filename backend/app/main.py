@@ -11,6 +11,7 @@ from app.api import (
     imports,
     installments,
     merchants,
+    recurrences,
     rules,
     transactions,
 )
@@ -44,6 +45,7 @@ def create_app(frontend_dist: Path | None = None) -> FastAPI:
         rules,
         dashboard,
         installments,
+        recurrences,
     ):
         app.include_router(module.router, prefix="/api")
     dist = frontend_dist if frontend_dist is not None else get_settings().frontend_dist

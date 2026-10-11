@@ -1,3 +1,4 @@
+from datetime import date
 from typing import Literal
 
 from fastapi import APIRouter, Depends, Query
@@ -5,6 +6,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.analytics import dashboard as analytics
+from app.analytics import floor as floor_analytics
+from app.analytics.recurrence import default_params
 from app.repo.db import get_session
 
 router = APIRouter(tags=["dashboard"])
@@ -52,6 +55,67 @@ class HistoryMonthDTO(BaseModel):
 class HistoryDTO(BaseModel):
     months: list[HistoryMonthDTO]
     categories: list[HistoryCategoryDTO]
+
+
+class FloorInstallmentDTO(BaseModel):
+    group_key: str
+    description: str
+    number: int
+    total: int
+    amount_cents: int
+    account_name: str
+
+
+class FloorRecurrenceDTO(BaseModel):
+    merchant_key: str
+    description: str
+    last_cents: int
+    last_on: date
+
+
+class FloorDTO(BaseModel):
+    month: str
+    target_month: str
+    total_cents: int
+    installments_cents: int
+    installments: list[FloorInstallmentDTO]
+    recurrences_cents: int
+    recurrences: list[FloorRecurrenceDTO]
+
+
+@router.get("/dashboard/floor")
+def get_floor(
+    month: str = Query(pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
+    session: Session = Depends(get_session),
+) -> FloorDTO:
+    result = floor_analytics.floor(session, month, default_params())
+    return FloorDTO(
+        month=result.month,
+        target_month=result.target_month,
+        total_cents=result.total_cents,
+        installments_cents=result.installments_cents,
+        installments=[
+            FloorInstallmentDTO(
+                group_key=i.group_key,
+                description=i.description,
+                number=i.number,
+                total=i.total,
+                amount_cents=i.amount_cents,
+                account_name=i.account_name,
+            )
+            for i in result.installments
+        ],
+        recurrences_cents=result.recurrences_cents,
+        recurrences=[
+            FloorRecurrenceDTO(
+                merchant_key=r.merchant_key,
+                description=r.description,
+                last_cents=r.last_cents,
+                last_on=r.last_on,
+            )
+            for r in result.recurrences
+        ],
+    )
 
 
 @router.get("/dashboard/summary")

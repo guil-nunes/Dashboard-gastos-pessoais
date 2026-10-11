@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { errorDetail } from '../api/errors'
 import type { components } from '../api/schema'
 import CategoryTransactions from '../components/dashboard/CategoryTransactions'
+import FloorCard from '../components/dashboard/FloorCard'
 import HistoryChart, { UNCATEGORIZED_COLOR } from '../components/dashboard/HistoryChart'
 import { brl, monthLabel, pct } from '../format'
 
@@ -158,6 +159,8 @@ export default function DashboardPage() {
               </div>
             )}
           </div>
+
+          <FloorCard month={month} />
 
           <h2>Por categoria</h2>
           {shown && shown.categories.length === 0 ? (

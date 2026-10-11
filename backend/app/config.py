@@ -15,6 +15,10 @@ class Settings(BaseSettings):
     backups_dir: Path = Path("backups")
     backups_keep: int = 10
     frontend_dist: Path = Path("frontend/dist")
+    recurrence_min_occurrences: int = 3
+    recurrence_min_days: int = 25
+    recurrence_max_days: int = 35
+    recurrence_tolerance_pct: int = 10
     gemini_enabled: bool = False
     gemini_api_key: str | None = None
 
