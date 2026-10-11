@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
+from app.classification.service import reclassify_unreviewed
 from app.repo import transactions as repo
 from app.repo.db import get_session
 from app.repo.models import Category
@@ -82,5 +83,7 @@ def patch_category(
         category.color = body.color
     if body.is_active is not None:
         category.is_active = body.is_active
+    session.flush()
+    reclassify_unreviewed(session)  # inativa/reativada muda o que as estratégias sugerem
     session.commit()
     return _dto(category)

@@ -24,6 +24,8 @@ class MemoryStrategy:
                 source="memoria",
                 confidence=1.0,
             )
+        if entry.category_id is None:
+            return None  # sem categoria lembrada: deixa regras e categoria do banco sugerirem
         return Classification(
             kind="despesa", category_id=entry.category_id, source="memoria", confidence=1.0
         )

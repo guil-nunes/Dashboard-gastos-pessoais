@@ -172,3 +172,26 @@ def test_correction_of_unknown_transaction_returns_none(session):
         )
         is None
     )
+
+
+def test_deactivated_category_is_no_longer_suggested(session, fixture_file):
+    _import(session, fixture_file, CARD_AUG)
+    transporte = session.get(Category, _category(session, "Transporte"))
+    transporte.is_active = False
+    session.flush()
+
+    reclassify_unreviewed(session)
+
+    uber = _by_key(session, "UBER NUPAY")
+    assert {(t.category_id, t.category_source) for t in uber} == {(None, "nenhuma")}
+
+
+def test_memory_without_category_lets_keyword_rule_suggest(session, fixture_file):
+    _import(session, fixture_file, CARD_AUG)
+    uber = _by_key(session, "UBER NUPAY")
+    _correct(session, uber[0], None)  # despesa sem categoria lembrada
+
+    reclassify_unreviewed(session, merchant_key="UBER NUPAY")
+
+    rest = [t for t in _by_key(session, "UBER NUPAY") if t.reviewed_at is None]
+    assert rest and {t.category_id for t in rest} == {_category(session, "Transporte")}
