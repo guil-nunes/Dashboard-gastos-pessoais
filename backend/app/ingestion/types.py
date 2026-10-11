@@ -41,7 +41,16 @@ class RowError:
 
 
 @dataclass(frozen=True)
+class NextInvoiceLine:
+    """Parcela já prevista pelo banco para uma fatura futura (só para conferir as projetadas)."""
+
+    description: str
+    amount_cents: int
+
+
+@dataclass(frozen=True)
 class ParsedFile:
     account: AccountInfo
     transactions: list[RawTransaction]
     errors: list[RowError] = field(default_factory=list)
+    next_invoice_lines: list[NextInvoiceLine] = field(default_factory=list)

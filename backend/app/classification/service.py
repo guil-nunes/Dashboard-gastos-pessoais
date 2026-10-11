@@ -11,11 +11,13 @@ from sqlalchemy.orm import Session
 from app.classification.base import ClassificationInput
 from app.classification.pipeline import build_strategies, classify
 from app.repo.classification import load_context
+from app.repo.imports import rebuild_projected
 from app.repo.models import (
     IGNORE_REASONS,
     TRANSACTION_KINDS,
     Account,
     Category,
+    InstallmentGroupOverride,
     MerchantMemory,
     Transaction,
 )
@@ -93,11 +95,14 @@ def apply_correction(
     ignore_reason: str | None,
     category_id: int | None,
     now: datetime,
+    rebuild: bool = True,
 ) -> Transaction | None:
     """Correção manual (ou confirmação de sugestão): grava, lembra e recategoriza o resto.
 
     Atualiza a memória do estabelecimento e reclassifica as não revisadas do mesmo
     `merchant_key`. `investimento` vale só para esta transação: a memória nunca o guarda (Q15).
+    Em parcela, a categoria vira override do grupo e as projetadas da conta são reconstruídas
+    (R10); `rebuild=False` deixa isso para quem corrige várias de uma vez.
     """
     transaction = session.get(Transaction, transaction_id)
     if transaction is None:
@@ -106,8 +111,11 @@ def apply_correction(
     _set_manual(transaction, kind, ignore_reason, category_id, now)
     if transaction.ignore_reason != "investimento":
         _remember(session, transaction, now)
+    _remember_group_category(session, transaction, now)
     session.flush()
     reclassify_unreviewed(session, merchant_key=transaction.merchant_key)
+    if rebuild:
+        rebuild_projected(session, [transaction.account_id], now)
     return transaction
 
 
@@ -158,11 +166,19 @@ def bulk_apply(
         return 0
     first, *rest = targets
     apply_correction(
-        session, first.id, kind=kind, ignore_reason=ignore_reason, category_id=category_id, now=now
+        session,
+        first.id,
+        kind=kind,
+        ignore_reason=ignore_reason,
+        category_id=category_id,
+        now=now,
+        rebuild=False,
     )
     for transaction in rest:
         _set_manual(transaction, kind, ignore_reason, category_id, now)
+        _remember_group_category(session, transaction, now)
     session.flush()
+    rebuild_projected(session, {t.account_id for t in targets}, now)
     return len(targets)
 
 
@@ -191,6 +207,19 @@ def _set_manual(
     transaction.reviewed_at = now
     if kind == "ignorar" and ignore_reason == transaction.suggested_ignore_reason:
         transaction.suggested_ignore_reason = None  # sugestão confirmada
+
+
+def _remember_group_category(session: Session, transaction: Transaction, now: datetime) -> None:
+    """Corrigir a categoria de qualquer parcela grava o override do grupo (R10)."""
+    key = transaction.installment_group_key
+    if key is None or transaction.kind != "despesa" or transaction.status != "real":
+        return
+    override = session.get(InstallmentGroupOverride, key)
+    if override is None:
+        override = InstallmentGroupOverride(installment_group_key=key)
+        session.add(override)
+    override.category_id = transaction.category_id
+    override.updated_at = now
 
 
 def _remember(session: Session, transaction: Transaction, now: datetime) -> None:

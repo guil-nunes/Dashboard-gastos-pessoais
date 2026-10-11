@@ -292,3 +292,10 @@ button.link {
 tr[data-selected='true'] td {
   font-weight: 600;
 }
+
+.flagged {
+  margin: 16px 0;
+  padding: 0 16px;
+  border: 1px solid var(--error);
+  border-radius: 8px;
+}

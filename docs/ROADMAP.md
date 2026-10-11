@@ -147,11 +147,11 @@ Objetivo: fechar o mês. **Ao fim desta fase, fazer o primeiro fechamento real e
 Objetivo: mostrar o que já está comprometido nos próximos meses.
 
 ### 4.1 Parcelas projetadas (R10)
-- [ ] Reconstrução das projetadas ao fim de cada importação e de cada desfazer, na mesma transação SQL
-- [ ] Categoria via `installment_group_override` ou última parcela real
-- [ ] Sinalização de grupos com projetada vencida sem a parcela real (compra cancelada ou antecipada)
-- [ ] `GET /installments/upcoming` e tela **Parcelas**
-- [ ] Conferência opcional com "Próxima fatura" da fatura do Itaú
+- [x] Reconstrução das projetadas ao fim de cada importação e de cada desfazer, na mesma transação SQL
+- [x] Categoria via `installment_group_override` ou última parcela real
+- [x] Sinalização de grupos com projetada vencida sem a parcela real (compra cancelada ou antecipada)
+- [x] `GET /installments/upcoming` e tela **Parcelas**
+- [x] Conferência opcional com "Próxima fatura" da fatura do Itaú
 
 **Testes:** independência de ordem incluindo as projetadas; real substitui projetada; antecipação não gera grupo duplicado.
 

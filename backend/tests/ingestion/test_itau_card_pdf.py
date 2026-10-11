@@ -6,11 +6,18 @@ from app.domain.installments import InstallmentInfo
 from app.domain.months import YearMonth
 from app.ingestion.adapters.itau_card_pdf import ItauCardPdf
 from app.ingestion.prepare import prepare
-from app.ingestion.types import AccountInfo, RejectedFile
+from app.ingestion.types import AccountInfo, NextInvoiceLine, RejectedFile
 
 ADAPTER = ItauCardPdf()
 INVOICE = "itau/itau_fatura_2026-01.pdf"
 DEC, JAN = YearMonth(2025, 12), YearMonth(2026, 1)
+
+
+def test_next_invoice_lines_are_exposed_but_not_transactions(fixture_file):
+    parsed = ADAPTER.parse(*reversed(fixture_file(INVOICE)))
+
+    assert parsed.next_invoice_lines == [NextInvoiceLine("MERCADOLIVRE*5525310/12", 1071)]
+    assert all("5525310" not in t.description_raw for t in parsed.transactions)
 
 
 def test_golden_invoice(fixture_file):

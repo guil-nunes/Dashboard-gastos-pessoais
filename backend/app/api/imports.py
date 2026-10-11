@@ -32,6 +32,7 @@ class ImportResultDTO(BaseModel):
     account_id: int | None
     account_name: str | None
     needs_holder: bool
+    warnings: list[str]
 
 
 class ImportBatchDTO(BaseModel):

@@ -120,6 +120,8 @@ class Transaction(Base):
     installment_number: Mapped[int | None]
     installment_total: Mapped[int | None]
     installment_group_key: Mapped[str | None] = mapped_column(String)
+    # Mês da parcela 1 (R10): base da competência das projetadas; a antecipação desloca só as reais.
+    installment_first_month: Mapped[str | None] = mapped_column(String(7))
     status: Mapped[str] = mapped_column(String)
     dedup_key: Mapped[str] = mapped_column(String, unique=True)
     created_at: Mapped[datetime] = mapped_column(DateTime)

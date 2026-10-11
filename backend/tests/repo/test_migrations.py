@@ -196,6 +196,47 @@ def test_deleting_batch_cascades_sources_and_keeps_shared_transaction(session, a
     assert session.get(Transaction, shared.id).import_batch_id is None
 
 
+def test_migration_0003_backfills_installment_first_month(alembic_config):
+    """Parcelas já gravadas ganham o mês da parcela 1: Nubank = linha − (n−1); Itaú = compra."""
+    from sqlalchemy import create_engine, text
+
+    command.upgrade(alembic_config, "0002")
+    engine = create_engine(alembic_config.get_main_option("sqlalchemy.url"))
+    with engine.begin() as connection:
+        connection.execute(
+            text(
+                "INSERT INTO account (id, bank, kind, external_account_id, name) VALUES "
+                "(1, 'nubank', 'cartao', '', 'Nubank cartão'), (2, 'itau', 'cartao', '', 'Itaú')"
+            )
+        )
+        for row_id, account_id, day, number in [(1, 1, "2026-08-01", 4), (2, 2, "2025-12-14", 3)]:
+            connection.execute(
+                text(
+                    "INSERT INTO transactions (id, account_id, occurred_on, competence_month, "
+                    "amount_cents, description_raw, merchant_key, normalizer_version, kind, "
+                    "category_source, installment_number, installment_total, status, dedup_key, "
+                    "created_at) VALUES (:id, :account, :day, '2026-08', 100, 'X', 'X', 1, "
+                    "'despesa', 'nenhuma', :number, 4, 'real', :key, '2026-10-01 00:00:00')"
+                ),
+                {
+                    "id": row_id,
+                    "account": account_id,
+                    "day": day,
+                    "number": number,
+                    "key": f"k{row_id}",
+                },
+            )
+
+    command.upgrade(alembic_config, "head")
+
+    with engine.connect() as connection:
+        values = dict(
+            connection.execute(text("SELECT id, installment_first_month FROM transactions")).all()
+        )
+    engine.dispose()
+    assert values == {1: "2026-05", 2: "2025-12"}
+
+
 def test_downgrade_removes_everything(alembic_config, migrated_engine):
     command.downgrade(alembic_config, "base")
 

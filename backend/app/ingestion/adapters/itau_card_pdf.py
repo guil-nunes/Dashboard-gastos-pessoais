@@ -1,7 +1,8 @@
 """Fatura do cartão Itaú em PDF (spec Anexo A.6.2).
 
 - Duas colunas por página: cada coluna é lida inteira (esquerda, depois direita), sem intercalar.
-- Lê "compras e saques" e "produtos e serviços"; ignora próximas faturas, resumo e simulações.
+- Lê "compras e saques" e "produtos e serviços"; resumo e simulações são ignorados. As
+  "próximas faturas" não viram transações: só são lidas para conferir as projetadas (R10).
 - Datas `DD/MM` sem ano: ano inferido pela data de emissão (fechamento) da fatura.
 - A linha abaixo de cada lançamento traz a categoria do banco e a cidade (`VESTUÁRIO .Osasco`).
 - Conferência: a soma lida tem de bater com "Total dos lançamentos atuais", senão rejeita.
@@ -16,7 +17,14 @@ from app.domain.dates import infer_year, parse_br_date
 from app.domain.installments import parse_itau_installment
 from app.domain.money import parse_brl_amount
 from app.ingestion.pdf import line_text, open_pdf, page_lines
-from app.ingestion.types import AccountInfo, ParsedFile, RawTransaction, RejectedFile, RowError
+from app.ingestion.types import (
+    AccountInfo,
+    NextInvoiceLine,
+    ParsedFile,
+    RawTransaction,
+    RejectedFile,
+    RowError,
+)
 
 ACCOUNT = AccountInfo("itau", "cartao", "", "Itaú cartão")
 # Divisa entre as colunas, antes do cabeçalho da direita: os ícones do resumo ("L", "=") ficam
@@ -64,7 +72,7 @@ class ItauCardPdf:
                 split = _column_split(page, split)
                 lines += page_lines(page, 0, split) + page_lines(page, split, page.width)
 
-        entries, errors, total = _read_sections([line_text(line) for line in lines])
+        entries, errors, total, upcoming = _read_sections([line_text(line) for line in lines])
         if total is None:
             raise RejectedFile("fatura Itaú sem 'Total dos lançamentos atuais'")
         read = sum(entry.cents for entry in entries)
@@ -74,7 +82,7 @@ class ItauCardPdf:
                 "o arquivo não foi importado"
             )
         transactions = [_to_raw(entry, closing) for entry in entries]
-        return ParsedFile(ACCOUNT, transactions, errors)
+        return ParsedFile(ACCOUNT, transactions, errors, upcoming)
 
 
 def _closing_date(first_page: str) -> date:
@@ -90,23 +98,31 @@ def _column_split(page, previous: float) -> float:
     return starts[-1] - SPLIT_MARGIN if len(starts) >= 2 else previous
 
 
-def _read_sections(texts: list[str]) -> tuple[list[_Entry], list[RowError], int | None]:
+def _read_sections(
+    texts: list[str],
+) -> tuple[list[_Entry], list[RowError], int | None, list[NextInvoiceLine]]:
     entries: list[_Entry] = []
     errors: list[RowError] = []
+    upcoming: list[NextInvoiceLine] = []
+    in_upcoming = False
     total = None
     active = False
     last: _Entry | None = None
     for line_no, text in enumerate(texts, start=1):
         lowered = text.casefold()
         if any(section in lowered for section in _ACTIVE_SECTIONS):
-            active, last = True, None
+            active, last, in_upcoming = True, None, False
             continue
         if any(section in lowered for section in _INACTIVE_SECTIONS):
-            active, last = False, None
+            active, last, in_upcoming = False, None, True
             continue
         if match := _TOTAL.search(text):
             total = parse_brl_amount((match.group(1) or "") + match.group(2))
-            active, last = False, None
+            active, last, in_upcoming = False, None, False
+            continue
+        if in_upcoming and (match := _TRANSACTION.match(text)):
+            sign, value = match.group(4), match.group(5)
+            upcoming.append(NextInvoiceLine(match.group(3), parse_brl_amount((sign or "") + value)))
             continue
         if not active:
             continue
@@ -121,7 +137,7 @@ def _read_sections(texts: list[str]) -> tuple[list[_Entry], list[RowError], int 
             last = None
         elif last is not None and last.category is None and (match := _CATEGORY.match(text)):
             last.category = match.group(1).strip()
-    return entries, errors, total
+    return entries, errors, total, upcoming
 
 
 def _to_raw(entry: _Entry, closing: date) -> RawTransaction:

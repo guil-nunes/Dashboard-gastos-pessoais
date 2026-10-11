@@ -164,6 +164,11 @@ export default function ImportPage() {
                         linha {e.line_no}: {e.reason}
                       </div>
                     ))}
+                    {r.warnings.map((warning) => (
+                      <div className="note" key={warning} role="status">
+                        ⚠ {warning}
+                      </div>
+                    ))}
                   </td>
                   <td>{r.rows_new}</td>
                   <td>{r.rows_duplicate}</td>

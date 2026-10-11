@@ -28,7 +28,7 @@ def _by_key(session, merchant_key):
     return list(
         session.scalars(
             select(Transaction)
-            .where(Transaction.merchant_key == merchant_key)
+            .where(Transaction.merchant_key == merchant_key, Transaction.status == "real")
             .order_by(Transaction.id)
         )
     )

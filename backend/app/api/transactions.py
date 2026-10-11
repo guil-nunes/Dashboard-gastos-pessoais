@@ -110,7 +110,7 @@ def get_transactions(
     source: str | None = None,
     merchant_key: str | None = None,
     kind: Kind | None = None,
-    status: Literal["real", "projetada"] | None = None,
+    status: Literal["real", "projetada"] = "real",  # projetadas só por pedido explícito
     bank: Literal["nubank", "itau"] | None = None,
     account_kind: Literal["conta", "cartao"] | None = None,
     without_category: bool = False,

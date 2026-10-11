@@ -11,6 +11,7 @@ from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.ingestion.next_invoice import check_next_invoice
 from app.ingestion.prepare import PreparedFile, PreparedTransaction, prepare
 from app.ingestion.types import RejectedFile, RowError
 from app.repo import imports as repo
@@ -31,6 +32,7 @@ class ImportResult:
     account_id: int | None = None
     account_name: str | None = None
     needs_holder: bool = False  # conta ainda sem titular (Q15)
+    warnings: list[str] = field(default_factory=list)  # conferências informativas (R10)
 
 
 def import_files(
@@ -93,6 +95,8 @@ def persist(session: Session, prepared: PreparedFile, now: datetime) -> ImportRe
     )
     session.add(batch)
     session.flush()
+    # As projetadas ocupam (grupo, número): saem antes das reais e voltam reconstruídas ao fim.
+    repo.delete_projected(session, [account.id])
 
     ids = repo.existing_ids_by_dedup_key(session, [t.dedup_key for t in prepared.transactions])
     sourced: set[int] = set()
@@ -116,6 +120,9 @@ def persist(session: Session, prepared: PreparedFile, now: datetime) -> ImportRe
             session.add(TransactionSource(transaction_id=transaction_id, import_batch_id=batch.id))
             sourced.add(transaction_id)
 
+    repo.rebuild_projected(session, [account.id], now)
+    warnings = check_next_invoice(session, account.id, prepared.next_invoice_lines)
+
     session.commit()
     return ImportResult(
         prepared.filename,
@@ -128,6 +135,7 @@ def persist(session: Session, prepared: PreparedFile, now: datetime) -> ImportRe
         account_id=account.id,
         account_name=account.name,
         needs_holder=account.holder is None,
+        warnings=warnings,
     )
 
 

@@ -249,6 +249,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/installments/upcoming": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get Upcoming */
+        get: operations["get_upcoming_api_installments_upcoming_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -334,6 +351,27 @@ export interface components {
             color?: string | null;
             /** Is Active */
             is_active?: boolean | null;
+        };
+        /** FlaggedGroupDTO */
+        FlaggedGroupDTO: {
+            /** Group Key */
+            group_key: string;
+            /** Description */
+            description: string;
+            /** Account Name */
+            account_name: string;
+            /** Next Number */
+            next_number: number;
+            /** Total */
+            total: number;
+            /** Expected Month */
+            expected_month: string;
+            /** Covered Through */
+            covered_through: string;
+            /** Remaining */
+            remaining: number;
+            /** Amount Cents */
+            amount_cents: number;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -438,6 +476,8 @@ export interface components {
             account_name: string | null;
             /** Needs Holder */
             needs_holder: boolean;
+            /** Warnings */
+            warnings: string[];
         };
         /** PendingMerchantDTO */
         PendingMerchantDTO: {
@@ -601,6 +641,39 @@ export interface components {
             ignore_reason?: string | null;
             /** Category Id */
             category_id?: number | null;
+        };
+        /** UpcomingDTO */
+        UpcomingDTO: {
+            /** Months */
+            months: components["schemas"]["UpcomingMonthDTO"][];
+            /** Flagged */
+            flagged: components["schemas"]["FlaggedGroupDTO"][];
+        };
+        /** UpcomingItemDTO */
+        UpcomingItemDTO: {
+            /** Group Key */
+            group_key: string;
+            /** Description */
+            description: string;
+            /** Number */
+            number: number;
+            /** Total */
+            total: number;
+            /** Amount Cents */
+            amount_cents: number;
+            /** Category Id */
+            category_id: number | null;
+            /** Account Name */
+            account_name: string;
+        };
+        /** UpcomingMonthDTO */
+        UpcomingMonthDTO: {
+            /** Month */
+            month: string;
+            /** Total Cents */
+            total_cents: number;
+            /** Items */
+            items: components["schemas"]["UpcomingItemDTO"][];
         };
         /** ValidationError */
         ValidationError: {
@@ -770,7 +843,7 @@ export interface operations {
                 source?: string | null;
                 merchant_key?: string | null;
                 kind?: ("despesa" | "ignorar") | null;
-                status?: ("real" | "projetada") | null;
+                status?: "real" | "projetada";
                 bank?: ("nubank" | "itau") | null;
                 account_kind?: ("conta" | "cartao") | null;
                 without_category?: boolean;
@@ -1169,6 +1242,26 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_upcoming_api_installments_upcoming_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpcomingDTO"];
                 };
             };
         };

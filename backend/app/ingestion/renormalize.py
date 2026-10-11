@@ -8,6 +8,7 @@ transações não revisadas, que são dado derivado.
 from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any
 
 from sqlalchemy import select
@@ -15,7 +16,8 @@ from sqlalchemy.orm import Session
 
 from app.classification.service import reclassify_unreviewed
 from app.domain.normalizer import NORMALIZER_VERSION, normalize_merchant
-from app.repo.models import LlmCache, MerchantMemory, RecurrenceOverride, Transaction
+from app.repo.imports import rebuild_projected
+from app.repo.models import Account, LlmCache, MerchantMemory, RecurrenceOverride, Transaction
 
 
 @dataclass(frozen=True)
@@ -27,8 +29,11 @@ class RenormalizeResult:
 
 def renormalize(session: Session) -> RenormalizeResult:
     """Uma transação SQL: quem chama faz commit (ou rollback em erro)."""
+    # Só as reais: as projetadas são derivadas e voltam reconstruídas ao fim (R10).
     outdated = session.scalars(
-        select(Transaction).where(Transaction.normalizer_version < NORMALIZER_VERSION)
+        select(Transaction).where(
+            Transaction.status == "real", Transaction.normalizer_version < NORMALIZER_VERSION
+        )
     ).all()
 
     old_to_new: dict[str, set[str]] = defaultdict(set)
@@ -46,6 +51,9 @@ def renormalize(session: Session) -> RenormalizeResult:
     session.flush()
 
     reclassified = reclassify_unreviewed(session) if outdated else 0
+    if outdated:
+        account_ids = list(session.scalars(select(Account.id)))
+        rebuild_projected(session, account_ids, datetime.now())
     return RenormalizeResult(len(outdated), len(changed), reclassified)
 
 

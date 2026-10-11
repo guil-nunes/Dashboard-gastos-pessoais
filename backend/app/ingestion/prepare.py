@@ -2,7 +2,7 @@
 
 import hashlib
 from collections.abc import Callable, Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 
 from app.classification.base import ClassificationInput, ClassifierContext
@@ -20,7 +20,7 @@ from app.domain.keys import (
 from app.domain.months import YearMonth
 from app.domain.normalizer import NORMALIZER_VERSION, normalize_merchant
 from app.ingestion.registry import detect
-from app.ingestion.types import AccountInfo, RawTransaction, RowError
+from app.ingestion.types import AccountInfo, NextInvoiceLine, RawTransaction, RowError
 
 
 @dataclass(frozen=True)
@@ -44,6 +44,7 @@ class PreparedTransaction:
     installment_number: int | None
     installment_total: int | None
     installment_group_key: str | None
+    installment_first_month: str | None
     dedup_key: str
 
 
@@ -54,6 +55,7 @@ class PreparedFile:
     account: AccountInfo
     transactions: list[PreparedTransaction]
     errors: list[RowError]
+    next_invoice_lines: list[NextInvoiceLine] = field(default_factory=list)
 
 
 def prepare(
@@ -118,6 +120,7 @@ def prepare(
                 installment_number=raw.installment.number if raw.installment else None,
                 installment_total=raw.installment.total if raw.installment else None,
                 installment_group_key=groups.get(index),
+                installment_first_month=str(raw.first_month) if raw.first_month else None,
                 dedup_key=dedup_key,
             )
         )
@@ -128,6 +131,7 @@ def prepare(
         account=account,
         transactions=transactions,
         errors=parsed.errors,
+        next_invoice_lines=parsed.next_invoice_lines,
     )
 
 

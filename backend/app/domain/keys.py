@@ -63,5 +63,10 @@ def installment_group_key(
     return "grp:" + _digest(account, root, total, first_month, ordinal)
 
 
+def dedup_key_projected(group_key: str, number: int) -> str:
+    """Chave de uma parcela projetada (R10); a real do mesmo número a substitui."""
+    return f"proj:{group_key}:{number}"
+
+
 def _digest(*parts: object) -> str:
     return hashlib.sha256("|".join(str(part) for part in parts).encode()).hexdigest()

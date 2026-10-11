@@ -66,8 +66,12 @@ def test_import_creates_account_batch_and_transactions(session, fixture_file):
         "",
         None,
     )
-    assert _count(session, Transaction) == _count(session, TransactionSource) == 11
-    assert set(session.scalars(select(Transaction.status))) == {"real"}
+    reals = select(func.count()).select_from(Transaction).where(Transaction.status == "real")
+    assert session.scalar(reals) == _count(session, TransactionSource) == 11
+    # só a Steam 2/3 (13,58) deixa uma parcela a vir; Latam 4/4 e Steam 3/3 estão completas
+    projected = session.scalars(select(Transaction).where(Transaction.status == "projetada")).all()
+    assert [(t.installment_number, t.competence_month) for t in projected] == [(3, "2026-09")]
+    assert projected[0].import_batch_id is None
 
 
 def test_reimporting_same_file_changes_nothing(session, fixture_file):
@@ -181,8 +185,11 @@ def test_failed_file_writes_nothing(session):
     assert result.status == "erro"
     assert "UNIQUE" in result.message
     assert _count(session, ImportBatch) == 1
-    assert _count(session, Transaction) == 1
-    assert session.scalar(select(Transaction.description_raw)) == "Loja - Parcela 2/3"
+    # A 3/3 projetada do primeiro arquivo sobrevive ao rollback do segundo.
+    statuses = sorted(session.scalars(select(Transaction.status)))
+    assert statuses == ["projetada", "real"]
+    real = session.scalars(select(Transaction).where(Transaction.status == "real")).one()
+    assert real.description_raw == "Loja - Parcela 2/3"
 
 
 def test_rejected_file_writes_nothing(session):
