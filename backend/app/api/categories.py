@@ -1,3 +1,5 @@
+import re
+
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
@@ -10,6 +12,7 @@ from app.repo.models import Category
 router = APIRouter(tags=["categories"])
 
 _NAME_TAKEN = "Já existe uma categoria com esse nome"
+_COLOR = re.compile(r"^#[0-9a-fA-F]{6}$")
 
 
 def _clean_name(value: str | None) -> str | None:
@@ -21,11 +24,22 @@ def _clean_name(value: str | None) -> str | None:
     return value
 
 
+def _clean_color(value: str | None) -> str | None:
+    if value is not None and not _COLOR.match(value):
+        raise ValueError("cor deve estar no formato #RRGGBB")
+    return value
+
+
 class CategoryDTO(BaseModel):
     id: int
     name: str
     color: str
     is_active: bool
+    transactions_count: int = 0
+
+
+class CategoryDeletedDTO(BaseModel):
+    affected_transactions: int
 
 
 class CategoryCreate(BaseModel):
@@ -36,6 +50,11 @@ class CategoryCreate(BaseModel):
     @classmethod
     def not_blank(cls, value: str) -> str:
         return _clean_name(value)
+
+    @field_validator("color")
+    @classmethod
+    def valid_color(cls, value: str) -> str:
+        return _clean_color(value)
 
 
 class CategoryUpdate(BaseModel):
@@ -48,16 +67,26 @@ class CategoryUpdate(BaseModel):
     def not_blank(cls, value: str | None) -> str | None:
         return _clean_name(value)
 
+    @field_validator("color")
+    @classmethod
+    def valid_color(cls, value: str | None) -> str | None:
+        return _clean_color(value)
 
-def _dto(category: Category) -> CategoryDTO:
+
+def _dto(category: Category, count: int = 0) -> CategoryDTO:
     return CategoryDTO(
-        id=category.id, name=category.name, color=category.color, is_active=category.is_active
+        id=category.id,
+        name=category.name,
+        color=category.color,
+        is_active=category.is_active,
+        transactions_count=count,
     )
 
 
 @router.get("/categories")
 def get_categories(session: Session = Depends(get_session)) -> list[CategoryDTO]:
-    return [_dto(c) for c in repo.list_categories(session)]
+    counts = repo.category_transaction_counts(session)
+    return [_dto(c, counts.get(c.id, 0)) for c in repo.list_categories(session)]
 
 
 @router.post("/categories", status_code=201)
@@ -82,3 +111,14 @@ def patch_category(
         raise HTTPException(status_code=409, detail=_NAME_TAKEN)
     session.commit()
     return _dto(result)
+
+
+@router.delete("/categories/{category_id}")
+def delete_category(
+    category_id: int, session: Session = Depends(get_session)
+) -> CategoryDeletedDTO:
+    result = catalog.delete_category(session, category_id)
+    if result == "not_found":
+        raise HTTPException(status_code=404, detail="Categoria não encontrada")
+    session.commit()
+    return CategoryDeletedDTO(affected_transactions=result)

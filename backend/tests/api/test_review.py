@@ -286,6 +286,35 @@ def test_categories_create_rename_deactivate(client):
     assert client.patch("/api/categories/9999", json={"name": "X"}).status_code == 404
 
 
+def test_category_color_must_be_hex(client):
+    assert client.post("/api/categories", json={"name": "Pets", "color": "azul"}).status_code == 422
+    created = client.post("/api/categories", json={"name": "Pets", "color": "#aabbcc"})
+    category_id = created.json()["id"]
+    assert client.patch(f"/api/categories/{category_id}", json={"color": "#12"}).status_code == 422
+
+
+def test_delete_category_moves_its_transactions_to_uncategorized(client, load):
+    load(CARD_AUG)
+    transporte = _category_id(client, "Transporte")
+    listed = next(c for c in client.get("/api/categories").json() if c["id"] == transporte)
+    assert listed["transactions_count"] == 2  # as duas corridas Uber de 2026-08
+    client.patch(
+        f"/api/transactions/{_transactions(client, category_id=transporte)[0]['id']}",
+        json={"category_id": transporte, "kind": "despesa"},
+    )  # uma revisada à mão
+
+    deleted = client.delete(f"/api/categories/{transporte}")
+
+    assert deleted.status_code == 200 and deleted.json() == {"affected_transactions": 2}
+    assert all(c["id"] != transporte for c in client.get("/api/categories").json())
+    uber = [t for t in _transactions(client) if t["merchant_key"] == "UBER NUPAY"]
+    assert {t["category_id"] for t in uber} == {None}
+    assert _merchant(client, "UBER NUPAY")["count"] == 2  # as duas voltaram à fila
+    summary = client.get("/api/dashboard/summary", params={"month": "2026-08"}).json()
+    assert next(c for c in summary["categories"] if c["category_id"] is None)["count"] >= 2
+    assert client.delete(f"/api/categories/{transporte}").status_code == 404
+
+
 def test_rules_crud_and_validation(client):
     alimentacao = _category_id(client, "Alimentação")
 

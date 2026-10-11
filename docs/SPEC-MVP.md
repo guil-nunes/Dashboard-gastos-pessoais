@@ -302,7 +302,7 @@ Todas as rotas ficam sob o prefixo **`/api`** (ex.: `POST /api/imports`). Isso s
 | `PATCH` | `/transactions/{id}` | Alterar categoria / tipo, ou confirmar sugestão |
 | `GET` | `/merchants?pending=true` | Pendentes agrupados por `merchant_key`, com contagem e sugestão (revisão em lote, R7) |
 | `POST` | `/transactions/bulk-categorize` | Aplicar categoria/tipo, ou confirmar, por `merchant_key` |
-| `GET` · `POST` · `PATCH` | `/categories` | Listar / criar / editar categorias |
+| `GET` · `POST` · `PATCH` · `DELETE` | `/categories` | Listar / criar / editar / excluir categorias (excluir deixa as transações sem categoria; ver §8) |
 | `GET` · `POST` · `PATCH` · `DELETE` | `/rules` | Manter as regras de palavra-chave |
 | `GET` | `/dashboard/summary?month=` | Totais e por categoria do mês |
 | `GET` | `/dashboard/history` | Série mensal |
@@ -430,6 +430,8 @@ recurrence_override              -- R9: "não é recorrente"
 Moradia · Alimentação · Transporte · Saúde e Bem-Estar · Educação e Trabalho · Lazer e Tecnologia · Dívidas.
 
 Transações sem categoria ficam com `category_id = NULL` ("Sem categoria") — não há categoria "Outros" no seed.
+
+Excluir uma categoria (qualquer uma, inclusive as do seed) deixa todas as suas transações, reais e projetadas, sem categoria (`category_id = NULL`, origem `nenhuma`); as que estavam revisadas voltam a pendentes. Regras de palavra-chave, mapa da categoria do banco, override de parcelas e cache de LLM que apontavam para ela são apagados; a memória do estabelecimento perde só a categoria. A exclusão não dispara reclassificação automática.
 
 ## 9. Questões em aberto
 

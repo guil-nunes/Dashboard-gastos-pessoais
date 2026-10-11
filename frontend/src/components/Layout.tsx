@@ -7,6 +7,7 @@ const NAV_ITEMS = [
   { to: '/dashboard', label: 'Dashboard' },
   { to: '/recorrentes', label: 'Recorrentes' },
   { to: '/parcelas', label: 'Parcelas' },
+  { to: '/categorias', label: 'Categorias' },
 ]
 
 export default function Layout() {

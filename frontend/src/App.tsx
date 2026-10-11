@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Layout from './components/Layout.tsx'
+import CategoriesPage from './pages/CategoriesPage.tsx'
 import DashboardPage from './pages/DashboardPage.tsx'
 import ImportPage from './pages/ImportPage.tsx'
 import InstallmentsPage from './pages/InstallmentsPage.tsx'
@@ -16,6 +17,7 @@ export default function App() {
         <Route path="dashboard" element={<DashboardPage />} />
         <Route path="recorrentes" element={<RecurrencesPage />} />
         <Route path="parcelas" element={<InstallmentsPage />} />
+        <Route path="categorias" element={<CategoriesPage />} />
       </Route>
     </Routes>
   )

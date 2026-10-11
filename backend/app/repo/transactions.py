@@ -136,6 +136,15 @@ def list_categories(session: Session) -> list[Category]:
     return list(session.scalars(select(Category).order_by(Category.id)))
 
 
+def category_transaction_counts(session: Session) -> dict[int, int]:
+    rows = session.execute(
+        select(Transaction.category_id, func.count())
+        .where(Transaction.category_id.is_not(None))
+        .group_by(Transaction.category_id)
+    )
+    return {category_id: count for category_id, count in rows}
+
+
 def get_category(session: Session, category_id: int) -> Category | None:
     return session.get(Category, category_id)
 

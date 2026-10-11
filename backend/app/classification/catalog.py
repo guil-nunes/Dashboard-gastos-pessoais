@@ -7,11 +7,20 @@ levanta `ValueError` com a mensagem para o usuário (422).
 import re
 from typing import Literal
 
+from sqlalchemy import delete, update
 from sqlalchemy.orm import Session
 
 from app.classification.service import reclassify_unreviewed
 from app.repo import transactions as repo
-from app.repo.models import Category, KeywordRule
+from app.repo.models import (
+    BankCategoryMap,
+    Category,
+    InstallmentGroupOverride,
+    KeywordRule,
+    LlmCache,
+    MerchantMemory,
+    Transaction,
+)
 
 NotFound = Literal["not_found"]
 NameTaken = Literal["name_taken"]
@@ -48,6 +57,38 @@ def update_category(
     session.flush()
     reclassify_unreviewed(session)  # inativa/reativada muda o que as estratégias sugerem
     return category
+
+
+def delete_category(session: Session, category_id: int) -> int | NotFound:
+    """Exclui a categoria e devolve quantas transações ficaram sem categoria.
+
+    É ação explícita do usuário, então vale também para transações revisadas: elas voltam à fila.
+    Não reclassifica: o pedido é que tudo caia em "Sem categoria".
+    """
+    category = repo.get_category(session, category_id)
+    if category is None:
+        return "not_found"
+    affected = session.execute(
+        update(Transaction)
+        .where(Transaction.category_id == category_id)
+        .values(
+            category_id=None,
+            category_source="nenhuma",
+            category_confidence=None,
+            reviewed_at=None,
+        )
+    ).rowcount
+    # Sem a categoria, regra, mapa, override e cache perdem o sentido; a memória guarda o tipo.
+    for model in (KeywordRule, BankCategoryMap, InstallmentGroupOverride, LlmCache):
+        session.execute(delete(model).where(model.category_id == category_id))
+    session.execute(
+        update(MerchantMemory)
+        .where(MerchantMemory.category_id == category_id)
+        .values(category_id=None)
+    )
+    session.delete(category)
+    session.flush()
+    return affected
 
 
 def create_rule(

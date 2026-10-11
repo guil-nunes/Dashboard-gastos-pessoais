@@ -16,7 +16,7 @@ Rota planejada para implementar a [spec do MVP](SPEC-MVP.md). Os identificadores
 | **1. Importar** | Transações corretas no banco, sem duplicidade | Upload dos 4 formatos com resumo por arquivo | R1–R5 |
 | **2. Categorizar e revisar** | Toda despesa com tipo e categoria revisáveis | Tela de revisão individual e em lote | R6 (estratégias 0–3), R7 |
 | **3. Dashboard** | Fechar o mês | **Primeiro fechamento real** | R8 |
-| **4. Recorrência e parcelas** | Ver compromissos futuros | Recorrentes, parcelas futuras, piso do mês | R9, R10, R12 |
+| **4. Recorrência e parcelas** | Ver compromissos futuros | Recorrentes, parcelas futuras, piso do mês, categorias editáveis | R9, R10, R12 |
 | **5. Categorização avançada** | Menos revisão manual | Classificador local e Gemini opcional | R11 |
 
 ```
@@ -165,6 +165,13 @@ Objetivo: mostrar o que já está comprometido nos próximos meses.
 - [x] Card no dashboard com o detalhamento em parcelas e recorrentes
 
 **Pronto quando:** o piso de um mês passado pode ser comparado com o gasto real daquele mês.
+
+### 4.4 Gerenciar categorias
+- [x] `DELETE /categories/{id}`: as transações da categoria (reais e projetadas) ficam sem categoria (`category_id = NULL`, origem `nenhuma`) e, se revisadas, voltam para a fila de Revisar; regras, mapa do banco, override de parcelas e cache apontando para ela são apagados, e a memória perde só a categoria
+- [x] `GET /categories` com a contagem de transações; cor validada como `#RRGGBB`
+- [x] Tela **Categorias**: criar, renomear, trocar cor, ativar/inativar e excluir (com confirmação que informa quantas transações serão afetadas)
+
+**Pronto quando:** excluir uma categoria move o valor dela para "Sem categoria" no dashboard, e as transações reaparecem em Revisar.
 
 ---
 

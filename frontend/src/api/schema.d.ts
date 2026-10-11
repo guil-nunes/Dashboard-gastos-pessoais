@@ -172,7 +172,8 @@ export interface paths {
         get?: never;
         put?: never;
         post?: never;
-        delete?: never;
+        /** Delete Category */
+        delete: operations["delete_category_api_categories__category_id__delete"];
         options?: never;
         head?: never;
         /** Patch Category */
@@ -378,6 +379,16 @@ export interface components {
             color: string;
             /** Is Active */
             is_active: boolean;
+            /**
+             * Transactions Count
+             * @default 0
+             */
+            transactions_count: number;
+        };
+        /** CategoryDeletedDTO */
+        CategoryDeletedDTO: {
+            /** Affected Transactions */
+            affected_transactions: number;
         };
         /** CategoryTotalDTO */
         CategoryTotalDTO: {
@@ -1138,6 +1149,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["CategoryDTO"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_category_api_categories__category_id__delete: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                category_id: number;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CategoryDeletedDTO"];
                 };
             };
             /** @description Validation Error */
