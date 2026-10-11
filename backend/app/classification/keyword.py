@@ -19,8 +19,6 @@ class KeywordStrategy:
         for rule in self._rules:
             if not _matches(rule, haystacks):
                 continue
-            if rule.kind == "ignorar":
-                continue  # regra não carrega motivo de ignorar (só estrutural ou usuário)
             return Classification(
                 kind="despesa",
                 category_id=rule.category_id,

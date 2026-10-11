@@ -325,3 +325,9 @@ def test_rule_change_reclassifies_unreviewed_only(client, load, migrated_engine)
         assert (
             session.scalar(select(Category.id).where(Category.name == "Transporte")) == transporte
         )
+
+
+def test_transactions_month_filter_rejects_invalid_month(client):
+    assert client.get("/api/transactions", params={"month": "2026-13"}).status_code == 422
+    assert client.get("/api/transactions", params={"month": "2026-00"}).status_code == 422
+    assert client.get("/api/transactions", params={"month": "2026-12"}).status_code == 200

@@ -104,7 +104,7 @@ def _validate(session: Session, body: TransactionPatch | BulkRequest) -> str:
 
 @router.get("/transactions")
 def get_transactions(
-    month: str | None = Query(default=None, pattern=r"^\d{4}-\d{2}$"),
+    month: str | None = Query(default=None, pattern=r"^\d{4}-(0[1-9]|1[0-2])$"),
     account_id: int | None = None,
     category_id: int | None = None,
     source: str | None = None,
