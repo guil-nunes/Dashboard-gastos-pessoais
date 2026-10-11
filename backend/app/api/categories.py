@@ -2,12 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, field_validator
 from sqlalchemy.orm import Session
 
-from app.classification.service import reclassify_unreviewed
+from app.classification import catalog
 from app.repo import transactions as repo
 from app.repo.db import get_session
 from app.repo.models import Category
 
 router = APIRouter(tags=["categories"])
+
+_NAME_TAKEN = "Já existe uma categoria com esse nome"
 
 
 def _clean_name(value: str | None) -> str | None:
@@ -60,30 +62,23 @@ def get_categories(session: Session = Depends(get_session)) -> list[CategoryDTO]
 
 @router.post("/categories", status_code=201)
 def post_category(body: CategoryCreate, session: Session = Depends(get_session)) -> CategoryDTO:
-    if repo.category_name_taken(session, body.name):
-        raise HTTPException(status_code=409, detail="Já existe uma categoria com esse nome")
-    category = Category(name=body.name, color=body.color, is_active=True)
-    session.add(category)
+    result = catalog.create_category(session, body.name, body.color)
+    if result == "name_taken":
+        raise HTTPException(status_code=409, detail=_NAME_TAKEN)
     session.commit()
-    return _dto(category)
+    return _dto(result)
 
 
 @router.patch("/categories/{category_id}")
 def patch_category(
     category_id: int, body: CategoryUpdate, session: Session = Depends(get_session)
 ) -> CategoryDTO:
-    category = repo.get_category(session, category_id)
-    if category is None:
+    result = catalog.update_category(
+        session, category_id, name=body.name, color=body.color, is_active=body.is_active
+    )
+    if result == "not_found":
         raise HTTPException(status_code=404, detail="Categoria não encontrada")
-    if body.name is not None:
-        if repo.category_name_taken(session, body.name, except_id=category.id):
-            raise HTTPException(status_code=409, detail="Já existe uma categoria com esse nome")
-        category.name = body.name
-    if body.color is not None:
-        category.color = body.color
-    if body.is_active is not None:
-        category.is_active = body.is_active
-    session.flush()
-    reclassify_unreviewed(session)  # inativa/reativada muda o que as estratégias sugerem
+    if result == "name_taken":
+        raise HTTPException(status_code=409, detail=_NAME_TAKEN)
     session.commit()
-    return _dto(category)
+    return _dto(result)

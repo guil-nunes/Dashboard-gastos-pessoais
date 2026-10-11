@@ -9,8 +9,8 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.classification.base import ClassificationInput
+from app.classification.context import load_context
 from app.classification.pipeline import build_strategies, classify
-from app.repo.classification import load_context
 from app.repo.imports import rebuild_projected
 from app.repo.models import (
     IGNORE_REASONS,

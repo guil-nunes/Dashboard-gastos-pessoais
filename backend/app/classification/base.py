@@ -3,9 +3,6 @@
 from dataclasses import dataclass, field
 from typing import Protocol
 
-# Abaixo disso a sugestão (categoria do banco, classificador) fica na fila de revisão (R6/R7).
-LOW_CONFIDENCE_THRESHOLD = 0.8
-
 
 @dataclass(frozen=True)
 class ClassificationInput:

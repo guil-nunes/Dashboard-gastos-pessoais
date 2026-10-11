@@ -11,11 +11,12 @@ from datetime import datetime
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.classification.context import load_context
 from app.ingestion.next_invoice import check_next_invoice
 from app.ingestion.prepare import PreparedFile, PreparedTransaction, prepare
 from app.ingestion.types import RejectedFile, RowError
 from app.repo import imports as repo
-from app.repo.classification import holder_of, load_context
+from app.repo.classification import holder_of
 from app.repo.models import ImportBatch, Transaction, TransactionSource
 
 

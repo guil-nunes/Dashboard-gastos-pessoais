@@ -7,7 +7,7 @@ from datetime import date
 from sqlalchemy import ColumnElement, and_, func, or_, select
 from sqlalchemy.orm import Session
 
-from app.classification.base import LOW_CONFIDENCE_THRESHOLD
+from app.domain.review import LOW_CONFIDENCE_THRESHOLD
 from app.repo.models import Account, Category, KeywordRule, Transaction
 
 
